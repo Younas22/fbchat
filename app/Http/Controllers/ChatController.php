@@ -183,9 +183,9 @@ class ChatController extends Controller
                 // Get the full local file path for direct upload to Facebook
                 $localFilePath = storage_path('app/public/' . $path);
 
-                // Generate full URL for database storage
+                // Generate full URL for database storage (use /files/ route to bypass symlink 403)
                 $baseUrl = rtrim(config('app.url'), '/');
-                $attachmentUrl = $baseUrl . '/storage/' . $path;
+                $attachmentUrl = $baseUrl . '/files/' . $path;
 
                 Log::info('Attachment uploaded', [
                     'path' => $path,

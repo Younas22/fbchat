@@ -45,6 +45,22 @@ Route::get('/clear-cache', function() {
     return 'Cache cleared!';
 });
 
+// Serve files from storage (bypass symlink 403 issue)
+Route::get('/files/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+
+    $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000',
+    ]);
+})->where('path', '.*')->name('files.serve');
+
 
 
 // Auth routes disabled - using API authentication with Sanctum instead
