@@ -360,7 +360,11 @@
                 // Format time in 12-hour format
                 const timestamp = msg.sent_at ? formatTime12Hour(new Date(msg.sent_at)) : '';
 
-                const attachmentUrl = msg.attachment_url || null;
+                // Convert /storage/ URLs to /files/ URLs (to fix 403 symlink issue)
+                let attachmentUrl = msg.attachment_url || null;
+                if (attachmentUrl && attachmentUrl.includes('/storage/')) {
+                    attachmentUrl = attachmentUrl.replace('/storage/', '/files/');
+                }
                 const attachmentType = msg.attachment_type || null;
 
                 // Message status (seen, delivered, sent)
