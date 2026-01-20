@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\PageController;
 
 // Main routes - no auth middleware since this is API-based app with Sanctum
@@ -36,6 +37,15 @@ Route::get('/privacy-policy', function () {
 Route::get('/data-deletion', function () {
     return view('data-deletion');
 })->name('data-deletion');
+
+
+Route::get('/clear-cache', function() {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    return 'Cache cleared!';
+});
+
+
 
 // Auth routes disabled - using API authentication with Sanctum instead
 // require __DIR__ . '/auth.php';
