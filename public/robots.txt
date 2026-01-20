@@ -1,2 +1,9 @@
+# Allow Meta/Facebook to access media files
+User-agent: facebookexternalhit
+Allow: /storage/
+
+User-agent: Facebot
+Allow: /storage/
+
 User-agent: *
 Disallow:
