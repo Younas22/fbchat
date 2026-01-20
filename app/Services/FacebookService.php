@@ -259,12 +259,19 @@ class FacebookService
 
     /**
      * Send message with attachment (image, file, etc.)
+     * Now uploads file directly to Facebook instead of providing URL
      */
-    public function sendAttachment($recipientId, $attachmentType, $attachmentUrl, $pageAccessToken)
+    public function sendAttachment($recipientId, $attachmentType, $attachmentUrl, $pageAccessToken, $localFilePath = null)
     {
         try {
             $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/me/messages';
 
+            // If we have a local file path, upload directly to Facebook
+            if ($localFilePath && file_exists($localFilePath)) {
+                return $this->sendAttachmentByUpload($recipientId, $attachmentType, $localFilePath, $pageAccessToken);
+            }
+
+            // Fallback: Try URL method first
             $data = [
                 'messaging_type' => 'RESPONSE',
                 'recipient' => ['id' => $recipientId],
@@ -314,6 +321,78 @@ class FacebookService
             }
 
             throw new \Exception('Unable to send attachment. Please try again.');
+        }
+    }
+
+    /**
+     * Upload attachment directly to Facebook (bypasses robots.txt issues)
+     */
+    public function sendAttachmentByUpload($recipientId, $attachmentType, $localFilePath, $pageAccessToken)
+    {
+        try {
+            $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/me/messages';
+
+            // Get file info
+            $filename = basename($localFilePath);
+            $mimeType = mime_content_type($localFilePath) ?: 'application/octet-stream';
+
+            // Build multipart form data
+            $messageData = json_encode([
+                'attachment' => [
+                    'type' => $attachmentType,
+                    'payload' => [
+                        'is_reusable' => true
+                    ]
+                ]
+            ]);
+
+            $postFields = [
+                'recipient' => json_encode(['id' => $recipientId]),
+                'messaging_type' => 'RESPONSE',
+                'message' => $messageData,
+                'filedata' => new \CURLFile($localFilePath, $mimeType, $filename),
+                'access_token' => $pageAccessToken
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120); // Longer timeout for file upload
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                Log::error('Facebook Upload cURL Error', ['error' => $curlError]);
+                throw new \Exception('Upload failed: ' . $curlError);
+            }
+
+            $result = json_decode($response, true);
+
+            if ($httpCode !== 200 || isset($result['error'])) {
+                $errorMsg = isset($result['error']) ? $result['error']['message'] : 'Unknown error';
+                Log::error('Facebook Direct Upload Error', [
+                    'http_code' => $httpCode,
+                    'error' => $errorMsg,
+                    'response' => $response
+                ]);
+                throw new \Exception($errorMsg);
+            }
+
+            Log::info('Facebook attachment uploaded successfully', [
+                'recipient' => $recipientId,
+                'file' => $filename,
+                'message_id' => $result['message_id'] ?? null
+            ]);
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Facebook Direct Upload Error: ' . $e->getMessage());
+            throw new \Exception('Unable to upload attachment. Please try again.');
         }
     }
 

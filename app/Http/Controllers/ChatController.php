@@ -171,6 +171,7 @@ class ChatController extends Controller
             // Handle attachment upload if present
             $attachmentUrl = null;
             $attachmentType = null;
+            $localFilePath = null;
 
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
@@ -179,26 +180,18 @@ class ChatController extends Controller
                 // Store file locally
                 $path = $file->store('attachments/' . $conversation->id, 'public');
 
-                // Generate full URL - Facebook needs publicly accessible URL
-                // For local development, use APP_URL from config
+                // Get the full local file path for direct upload to Facebook
+                $localFilePath = storage_path('app/public/' . $path);
+
+                // Generate full URL for database storage
                 $baseUrl = rtrim(config('app.url'), '/');
                 $attachmentUrl = $baseUrl . '/storage/' . $path;
 
-                // Check if running on localhost - Facebook cannot access localhost
-                $isLocalhost = str_contains($baseUrl, '127.0.0.1') || str_contains($baseUrl, 'localhost');
-
-                if ($isLocalhost) {
-                    Log::warning('Running on localhost - Facebook may not be able to access attachment URL', [
-                        'url' => $attachmentUrl,
-                        'suggestion' => 'Use ngrok or deploy to a public server for attachments to work'
-                    ]);
-                }
-
                 Log::info('Attachment uploaded', [
                     'path' => $path,
+                    'local_path' => $localFilePath,
                     'url' => $attachmentUrl,
-                    'type' => $attachmentType,
-                    'is_localhost' => $isLocalhost
+                    'type' => $attachmentType
                 ]);
             }
 
@@ -215,16 +208,20 @@ class ChatController extends Controller
 
                 // Send with or without attachment
                 if ($attachmentUrl && $attachmentType === 'image') {
-                    $result = $this->facebookService->sendImageMessage(
+                    $result = $this->facebookService->sendAttachment(
                         $conversation->customer_psid,
+                        'image',
                         $attachmentUrl,
-                        $token
+                        $token,
+                        $localFilePath
                     );
                 } elseif ($attachmentUrl) {
-                    $result = $this->facebookService->sendFileMessage(
+                    $result = $this->facebookService->sendAttachment(
                         $conversation->customer_psid,
+                        'file',
                         $attachmentUrl,
-                        $token
+                        $token,
+                        $localFilePath
                     );
                 } else {
                     $result = $this->facebookService->sendMessage(
@@ -265,16 +262,20 @@ class ChatController extends Controller
 
                 // Send with or without attachment
                 if ($attachmentUrl && $attachmentType === 'image') {
-                    $result = $this->facebookService->sendImageMessage(
+                    $result = $this->facebookService->sendAttachment(
                         $conversation->customer_psid,
+                        'image',
                         $attachmentUrl,
-                        $freshToken
+                        $freshToken,
+                        $localFilePath
                     );
                 } elseif ($attachmentUrl) {
-                    $result = $this->facebookService->sendFileMessage(
+                    $result = $this->facebookService->sendAttachment(
                         $conversation->customer_psid,
+                        'file',
                         $attachmentUrl,
-                        $freshToken
+                        $freshToken,
+                        $localFilePath
                     );
                 } else {
                     $result = $this->facebookService->sendMessage(
