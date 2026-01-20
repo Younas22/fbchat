@@ -98,6 +98,26 @@ class ChatController extends Controller
         foreach ($fbMessages as $fbMsg) {
             $senderType = isset($fbMsg['from']['id']) && $fbMsg['from']['id'] === $page->page_id ? 'page' : 'customer';
 
+            // Extract attachment data - Facebook uses attachments.data[] structure
+            $attachmentType = null;
+            $attachmentUrl = null;
+
+            if (isset($fbMsg['attachments']['data'][0])) {
+                $attachment = $fbMsg['attachments']['data'][0];
+                $attachmentType = $attachment['type'] ?? null;
+
+                // Get URL based on attachment type
+                if (isset($attachment['image_data']['url'])) {
+                    $attachmentUrl = $attachment['image_data']['url'];
+                } elseif (isset($attachment['video_data']['url'])) {
+                    $attachmentUrl = $attachment['video_data']['url'];
+                } elseif (isset($attachment['audio_data']['url'])) {
+                    $attachmentUrl = $attachment['audio_data']['url'];
+                } elseif (isset($attachment['file_url'])) {
+                    $attachmentUrl = $attachment['file_url'];
+                }
+            }
+
             Message::updateOrCreate(
                 ['message_id' => $fbMsg['id']],
                 [
@@ -105,8 +125,8 @@ class ChatController extends Controller
                     'message_text' => $fbMsg['message'] ?? null,
                     'sender_type' => $senderType,
                     'sender_id' => $fbMsg['from']['id'] ?? '',
-                    'attachment_type' => isset($fbMsg['attachments'][0]['type']) ? $fbMsg['attachments'][0]['type'] : null,
-                    'attachment_url' => isset($fbMsg['attachments'][0]['image_data']['url']) ? $fbMsg['attachments'][0]['image_data']['url'] : null,
+                    'attachment_type' => $attachmentType,
+                    'attachment_url' => $attachmentUrl,
                     'status' => 'sent',
                     'sent_at' => $fbMsg['created_time'] ?? now(),
                 ]
