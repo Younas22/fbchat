@@ -7,129 +7,247 @@
 
 @section('content')
 <!-- Login/Register Modal -->
-<div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-        <h3 class="text-2xl font-bold text-gray-900 mb-6">Welcome to FB Chat Manager</h3>
+<div id="authModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all">
+        <div class="text-center mb-6">
+            <!-- Logo -->
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-900">Welcome Back</h3>
+            <p class="text-slate-500 mt-1">Sign in to continue to FB Chat Manager</p>
+        </div>
 
         <!-- Login Form -->
         <div id="loginForm">
-            <p class="text-gray-600 mb-4">Please login to continue</p>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="loginEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                    <input type="email" id="loginEmail"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="your@email.com">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="loginPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                    <input type="password" id="loginPassword"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="Enter your password">
                 </div>
-                <button onclick="login()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Login</button>
-                <p class="text-center text-sm text-gray-600">
+                <button onclick="login()"
+                        class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600
+                               text-white font-semibold rounded-xl
+                               hover:from-blue-700 hover:to-indigo-700
+                               shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40
+                               transition-all duration-200">
+                    Sign In
+                </button>
+                <p class="text-center text-sm text-slate-500">
                     Don't have an account?
-                    <button onclick="showRegister()" class="text-blue-600 hover:text-blue-700 font-medium">Register</button>
+                    <button onclick="showRegister()" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
+                        Create one
+                    </button>
                 </p>
             </div>
         </div>
 
         <!-- Register Form -->
         <div id="registerForm" class="hidden">
-            <p class="text-gray-600 mb-4">Create a new account</p>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input type="text" id="registerName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your Name">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                    <input type="text" id="registerName"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="John Doe">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" id="registerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                    <input type="email" id="registerEmail"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="your@email.com">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="registerPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                    <input type="password" id="registerPassword"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="Create a password">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                    <input type="password" id="registerPasswordConfirmation" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
+                    <input type="password" id="registerPasswordConfirmation"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
+                                  transition-all duration-200 outline-none"
+                           placeholder="Confirm your password">
                 </div>
-                <button onclick="register()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Register</button>
-                <p class="text-center text-sm text-gray-600">
+                <button onclick="register()"
+                        class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600
+                               text-white font-semibold rounded-xl
+                               hover:from-blue-700 hover:to-indigo-700
+                               shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40
+                               transition-all duration-200">
+                    Create Account
+                </button>
+                <p class="text-center text-sm text-slate-500">
                     Already have an account?
-                    <button onclick="showLogin()" class="text-blue-600 hover:text-blue-700 font-medium">Login</button>
+                    <button onclick="showLogin()" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
+                        Sign in
+                    </button>
                 </p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="p-8">
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center justify-between">
+<!-- Dashboard Content -->
+<div class="p-4 lg:p-6 space-y-6">
+    <!-- Stats Cards Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <!-- Total Pages Card -->
+        <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm">Total Pages</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2" id="totalPages">0</p>
+                    <p class="text-sm font-medium text-slate-500">Total Pages</p>
+                    <p class="text-2xl lg:text-3xl font-bold text-slate-900 mt-1" id="totalPages">0</p>
                 </div>
-                <svg class="w-12 h-12 text-blue-600 opacity-20" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-                </svg>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-500">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
+                    Connected
+                </span>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center justify-between">
+        <!-- Total Conversations Card -->
+        <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm">Total Conversations</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2" id="totalConversations">0</p>
+                    <p class="text-sm font-medium text-slate-500">Conversations</p>
+                    <p class="text-2xl lg:text-3xl font-bold text-slate-900 mt-1" id="totalConversations">0</p>
                 </div>
-                <svg class="w-12 h-12 text-green-600 opacity-20" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"></path>
-                </svg>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-500">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-medium">
+                    All time
+                </span>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center justify-between">
+        <!-- Unread Messages Card -->
+        <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm">Unread Messages</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2" id="unreadMessages">0</p>
+                    <p class="text-sm font-medium text-slate-500">Unread</p>
+                    <p class="text-2xl lg:text-3xl font-bold text-slate-900 mt-1" id="unreadMessages">0</p>
                 </div>
-                <svg class="w-12 h-12 text-red-600 opacity-20" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                </svg>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-rose-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-500">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-medium">
+                    Pending
+                </span>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex items-center justify-between">
+        <!-- Saved Chats Card -->
+        <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
+            <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-gray-600 text-sm">Saved Chats</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2" id="savedChatsCount">0</p>
+                    <p class="text-sm font-medium text-slate-500">Saved Chats</p>
+                    <p class="text-2xl lg:text-3xl font-bold text-slate-900 mt-1" id="savedChatsCount">0</p>
                 </div>
-                <svg class="w-12 h-12 text-purple-600 opacity-20" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
-                </svg>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-violet-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-500">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-medium">
+                    Bookmarked
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- Connected Pages Section -->
-    <div class="bg-white rounded-lg shadow mb-8">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Connected Pages</h3>
+    <!-- Two Column Layout for Desktop -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- Connected Pages Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-5 lg:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">Connected Pages</h3>
+                    <p class="text-sm text-slate-500 mt-0.5">Your Facebook pages</p>
+                </div>
+                <a href="{{ route('pages.index') }}"
+                   class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                    View all
+                </a>
+            </div>
+            <div id="pagesList" class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+                <!-- Loading State -->
+                <div class="p-6 text-center">
+                    <div class="inline-flex items-center gap-2 text-slate-500">
+                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Loading pages...</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="pagesList" class="divide-y">
-            <!-- Pages load here -->
-        </div>
-    </div>
 
-    <!-- Recent Conversations -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Recent Conversations</h3>
-        </div>
-        <div id="recentConversations" class="divide-y">
-            <!-- Recent conversations load here -->
+        <!-- Recent Conversations Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-5 lg:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">Recent Conversations</h3>
+                    <p class="text-sm text-slate-500 mt-0.5">Latest customer chats</p>
+                </div>
+                <a href="{{ route('conversations.all') }}"
+                   class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                    View all
+                </a>
+            </div>
+            <div id="recentConversations" class="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+                <!-- Loading State -->
+                <div class="p-6 text-center">
+                    <div class="inline-flex items-center gap-2 text-slate-500">
+                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Loading conversations...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -151,11 +269,17 @@
     function showLogin() {
         document.getElementById('registerForm').classList.add('hidden');
         document.getElementById('loginForm').classList.remove('hidden');
+        // Update modal text
+        document.querySelector('#authModal h3').textContent = 'Welcome Back';
+        document.querySelector('#authModal h3 + p').textContent = 'Sign in to continue to FB Chat Manager';
     }
 
     function showRegister() {
         document.getElementById('loginForm').classList.add('hidden');
         document.getElementById('registerForm').classList.remove('hidden');
+        // Update modal text
+        document.querySelector('#authModal h3').textContent = 'Create Account';
+        document.querySelector('#authModal h3 + p').textContent = 'Join FB Chat Manager today';
     }
 
     async function login() {
@@ -263,54 +387,88 @@
             document.getElementById('totalConversations').textContent = totalConversations;
             document.getElementById('unreadMessages').textContent = totalUnread;
 
-            // Pages HTML
+            // Pages HTML - Modern design
             const pagesHTML = pages.map(page => `
-                <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <img src="${page.page_profile_pic || 'https://via.placeholder.com/48'}" alt="${page.page_name}" class="w-12 h-12 rounded-full">
-                        <div>
-                            <p class="font-medium text-gray-900">${page.page_name}</p>
-                            <p class="text-sm text-gray-600">ID: ${page.page_id}</p>
+                <div class="px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
+                    <div class="flex items-center gap-4">
+                        <img src="${page.page_profile_pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(page.page_name) + '&size=48&background=3b82f6&color=fff'}"
+                             alt="${page.page_name}"
+                             class="w-11 h-11 rounded-xl object-cover ring-2 ring-slate-100"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(page.page_name)}&size=48&background=3b82f6&color=fff'">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-slate-900 truncate">${page.page_name}</p>
+                            <p class="text-sm text-slate-500 truncate">ID: ${page.page_id}</p>
                         </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Active</span>
-                        <a href="/conversations/${page.id}" class="text-blue-600 hover:text-blue-700 font-medium">View</a>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                                Active
+                            </span>
+                            <a href="/conversations/${page.id}"
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                 </div>
             `).join('');
 
-            document.getElementById('pagesList').innerHTML = pagesHTML || '<div class="p-4 text-gray-600">No pages connected</div>';
+            document.getElementById('pagesList').innerHTML = pagesHTML || `
+                <div class="px-5 lg:px-6 py-12 text-center">
+                    <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                    <p class="text-slate-600 font-medium">No pages connected</p>
+                    <p class="text-sm text-slate-500 mt-1">Connect a Facebook page to get started</p>
+                </div>
+            `;
 
-            // Recent Conversations HTML
+            // Recent Conversations HTML - Modern design
             const sortedRecent = recentConversationsArray
                 .sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
                 .slice(0, 10);
 
             if (sortedRecent.length > 0) {
                 const recentHTML = sortedRecent.map(conv => `
-                    <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <img src="${conv.customer_profile_pic || 'https://via.placeholder.com/40'}"
-                                 alt="${conv.customer_name}"
-                                 class="w-10 h-10 rounded-full object-cover"
-                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(conv.customer_name || 'Unknown')}&size=40&background=random'">
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900">${conv.customer_name || 'Unknown'}</p>
-                                <p class="text-sm text-gray-600 truncate" style="max-width: 300px;">
-                                    ${conv.last_message_preview || 'No messages'}
-                                </p>
+                    <a href="/chat/${conv.id}" class="block px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <img src="${conv.customer_profile_pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(conv.customer_name || 'U') + '&size=44&background=random'}"
+                                     alt="${conv.customer_name}"
+                                     class="w-11 h-11 rounded-xl object-cover ring-2 ring-slate-100"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(conv.customer_name || 'Unknown')}&size=44&background=random'">
+                                ${conv.unread_count > 0 ? '<span class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white"></span>' : ''}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="font-medium text-slate-900 truncate">${conv.customer_name || 'Unknown'}</p>
+                                    ${conv.unread_count > 0 ? `
+                                        <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white">
+                                            ${conv.unread_count}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <p class="text-sm text-slate-500 truncate mt-0.5">${conv.last_message_preview || 'No messages yet'}</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            ${conv.unread_count > 0 ? `<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">${conv.unread_count} unread</span>` : ''}
-                            <a href="/chat/${conv.id}" class="text-blue-600 hover:text-blue-700 font-medium text-sm">View</a>
-                        </div>
-                    </div>
+                    </a>
                 `).join('');
                 document.getElementById('recentConversations').innerHTML = recentHTML;
             } else {
-                document.getElementById('recentConversations').innerHTML = '<div class="p-4 text-gray-600">No recent conversations</div>';
+                document.getElementById('recentConversations').innerHTML = `
+                    <div class="px-5 lg:px-6 py-12 text-center">
+                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <p class="text-slate-600 font-medium">No conversations yet</p>
+                        <p class="text-sm text-slate-500 mt-1">Messages will appear here once customers reach out</p>
+                    </div>
+                `;
             }
 
         } catch (error) {
