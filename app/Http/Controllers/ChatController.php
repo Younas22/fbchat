@@ -82,19 +82,27 @@ class ChatController extends Controller
     }
 
     /**
-     * Sync messages from Facebook to database
+     * Sync messages from Facebook to database (only new messages)
      */
-    private function syncMessagesFromFacebook($conversation)
+    private function syncMessagesFromFacebook($conversation, $limit = 50)
     {
         $page = FacebookPage::find($conversation->page_id);
 
         $fbMessages = $this->facebookService->getConversationMessages(
             $conversation->conversation_id,
             $page->page_access_token,
-            100
+            $limit
         );
 
+        $newMessagesCount = 0;
+
         foreach ($fbMessages as $fbMsg) {
+            // Skip if message already exists in database
+            $existingMessage = Message::where('message_id', $fbMsg['id'])->first();
+            if ($existingMessage) {
+                continue; // Don't update existing messages
+            }
+
             $senderType = isset($fbMsg['from']['id']) && $fbMsg['from']['id'] === $page->page_id ? 'page' : 'customer';
 
             // Extract attachment data - Facebook uses attachments.data[] structure
@@ -128,20 +136,23 @@ class ChatController extends Controller
                 }
             }
 
-            Message::updateOrCreate(
-                ['message_id' => $fbMsg['id']],
-                [
-                    'conversation_id' => $conversation->id,
-                    'message_text' => $fbMsg['message'] ?? null,
-                    'sender_type' => $senderType,
-                    'sender_id' => $fbMsg['from']['id'] ?? '',
-                    'attachment_type' => $attachmentType,
-                    'attachment_url' => $attachmentUrl,
-                    'status' => 'sent',
-                    'sent_at' => $fbMsg['created_time'] ?? now(),
-                ]
-            );
+            // Insert new message only (not update)
+            Message::create([
+                'message_id' => $fbMsg['id'],
+                'conversation_id' => $conversation->id,
+                'message_text' => $fbMsg['message'] ?? null,
+                'sender_type' => $senderType,
+                'sender_id' => $fbMsg['from']['id'] ?? '',
+                'attachment_type' => $attachmentType,
+                'attachment_url' => $attachmentUrl,
+                'status' => 'sent',
+                'sent_at' => $fbMsg['created_time'] ?? now(),
+            ]);
+
+            $newMessagesCount++;
         }
+
+        return $newMessagesCount;
     }
 
     /**
@@ -491,19 +502,13 @@ class ChatController extends Controller
                 'page_id' => $conversation->page_id
             ]);
 
-            // Count messages before sync
-            $messagesBefore = Message::where('conversation_id', $conversationId)->count();
+            // Sync only recent messages from Facebook (limit 20 to save API calls)
+            $newMessages = $this->syncMessagesFromFacebook($conversation, 20);
 
-            // Sync messages from Facebook
-            $this->syncMessagesFromFacebook($conversation);
-
-            // Count messages after sync
             $messagesAfter = Message::where('conversation_id', $conversationId)->count();
-            $newMessages = $messagesAfter - $messagesBefore;
 
             Log::info('Message sync completed', [
                 'conversation_id' => $conversationId,
-                'messages_before' => $messagesBefore,
                 'messages_after' => $messagesAfter,
                 'new_messages' => $newMessages
             ]);

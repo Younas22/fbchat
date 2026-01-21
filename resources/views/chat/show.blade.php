@@ -760,24 +760,9 @@
             });
     } else {
         console.warn('Echo (WebSocket) not available. Real-time updates disabled.');
-        console.log('Falling back to periodic auto-sync...');
-
-        // Fallback: Auto-sync every 10 seconds if WebSocket not available
-        setInterval(async () => {
-            try {
-                while (!window.ensureAuthenticated) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                await window.ensureAuthenticated();
-
-                const res = await axios.post(`${API_BASE}/chat/${conversationId}/sync`);
-                if (res.data.success && res.data.new_messages > 0) {
-                    await loadMessages();
-                }
-            } catch (error) {
-                console.error('Auto-sync failed:', error);
-            }
-        }, 10000);
+        console.log('Use manual Sync button to check for new messages.');
+        // Note: Auto-sync disabled to save Facebook API calls
+        // Users can click "Sync" button manually to check for new messages
     }
 
     // Send message on Enter key
