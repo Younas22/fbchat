@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\FacebookPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class WebhookController extends Controller
 {
@@ -116,7 +117,17 @@ class WebhookController extends Controller
         if (isset($messageData['attachments'])) {
             $attachment = $messageData['attachments'][0];
             $attachmentType = $attachment['type'];
-            $attachmentUrl = $attachment['payload']['url'] ?? null;
+            $fbAttachmentUrl = $attachment['payload']['url'] ?? null;
+
+            // Download and store attachment locally
+            if ($fbAttachmentUrl) {
+                $attachmentUrl = $this->downloadAndStoreAttachment(
+                    $fbAttachmentUrl,
+                    $conversation->id,
+                    $messageData['mid'],
+                    $attachmentType
+                );
+            }
         }
 
         // Save message to database
@@ -198,5 +209,106 @@ class WebhookController extends Controller
                 'watermark' => $watermark
             ]);
         }
+    }
+
+    /**
+     * Download attachment from Facebook CDN and store locally
+     */
+    private function downloadAndStoreAttachment($fbUrl, $conversationId, $messageId, $attachmentType)
+    {
+        try {
+            // Download file from Facebook CDN
+            $ch = curl_init($fbUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            $fileContent = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+
+            if ($httpCode !== 200 || empty($fileContent)) {
+                Log::warning('Failed to download attachment from Facebook webhook', [
+                    'url' => substr($fbUrl, 0, 100) . '...',
+                    'http_code' => $httpCode
+                ]);
+                return $fbUrl; // Fallback to Facebook URL
+            }
+
+            // Determine file extension from content type
+            $extension = $this->getExtensionFromContentType($contentType, $fbUrl, $attachmentType);
+
+            // Generate unique filename
+            $filename = 'fb_' . md5($messageId) . '_' . time() . '.' . $extension;
+            $path = 'attachments/' . $conversationId . '/' . $filename;
+
+            // Store file
+            Storage::disk('public')->put($path, $fileContent);
+
+            // Generate local URL
+            $baseUrl = rtrim(config('app.url'), '/');
+            $localUrl = $baseUrl . '/files/' . $path;
+
+            Log::info('Webhook attachment downloaded and stored', [
+                'message_id' => $messageId,
+                'path' => $path,
+                'type' => $attachmentType
+            ]);
+
+            return $localUrl;
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading webhook attachment', [
+                'error' => $e->getMessage(),
+                'url' => substr($fbUrl, 0, 100) . '...'
+            ]);
+            return $fbUrl; // Fallback to Facebook URL on error
+        }
+    }
+
+    /**
+     * Get file extension from content type or URL
+     */
+    private function getExtensionFromContentType($contentType, $url, $attachmentType)
+    {
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'video/mp4' => 'mp4',
+            'video/quicktime' => 'mov',
+            'audio/mpeg' => 'mp3',
+            'audio/mp4' => 'm4a',
+            'audio/ogg' => 'ogg',
+            'application/pdf' => 'pdf',
+        ];
+
+        $mime = explode(';', $contentType)[0];
+        $mime = trim($mime);
+
+        if (isset($mimeMap[$mime])) {
+            return $mimeMap[$mime];
+        }
+
+        // Try to get from URL
+        $urlPath = parse_url($url, PHP_URL_PATH);
+        if ($urlPath) {
+            $ext = pathinfo($urlPath, PATHINFO_EXTENSION);
+            if ($ext && strlen($ext) <= 5) {
+                return $ext;
+            }
+        }
+
+        // Default based on attachment type
+        $defaults = [
+            'image' => 'jpg',
+            'video' => 'mp4',
+            'audio' => 'mp3',
+            'file' => 'bin',
+        ];
+
+        return $defaults[$attachmentType] ?? 'bin';
     }
 }

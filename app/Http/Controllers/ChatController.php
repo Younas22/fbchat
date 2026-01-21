@@ -10,6 +10,7 @@ use App\Services\FacebookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -106,15 +107,26 @@ class ChatController extends Controller
                 $attachment = $fbMsg['attachments']['data'][0];
                 $attachmentType = $attachment['type'] ?? null;
 
-                // Get URL based on attachment type
+                // Get Facebook CDN URL based on attachment type
+                $fbAttachmentUrl = null;
                 if (isset($attachment['image_data']['url'])) {
-                    $attachmentUrl = $attachment['image_data']['url'];
+                    $fbAttachmentUrl = $attachment['image_data']['url'];
                 } elseif (isset($attachment['video_data']['url'])) {
-                    $attachmentUrl = $attachment['video_data']['url'];
+                    $fbAttachmentUrl = $attachment['video_data']['url'];
                 } elseif (isset($attachment['audio_data']['url'])) {
-                    $attachmentUrl = $attachment['audio_data']['url'];
+                    $fbAttachmentUrl = $attachment['audio_data']['url'];
                 } elseif (isset($attachment['file_url'])) {
-                    $attachmentUrl = $attachment['file_url'];
+                    $fbAttachmentUrl = $attachment['file_url'];
+                }
+
+                // Download and store attachment locally
+                if ($fbAttachmentUrl) {
+                    $attachmentUrl = $this->downloadAndStoreAttachment(
+                        $fbAttachmentUrl,
+                        $conversation->id,
+                        $fbMsg['id'],
+                        $attachmentType
+                    );
                 }
             }
 
@@ -132,6 +144,111 @@ class ChatController extends Controller
                 ]
             );
         }
+    }
+
+    /**
+     * Download attachment from Facebook CDN and store locally
+     */
+    private function downloadAndStoreAttachment($fbUrl, $conversationId, $messageId, $attachmentType)
+    {
+        try {
+            // Download file from Facebook CDN
+            $ch = curl_init($fbUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            $fileContent = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+
+            if ($httpCode !== 200 || empty($fileContent)) {
+                Log::warning('Failed to download attachment from Facebook', [
+                    'url' => substr($fbUrl, 0, 100) . '...',
+                    'http_code' => $httpCode
+                ]);
+                return $fbUrl; // Fallback to Facebook URL
+            }
+
+            // Determine file extension from content type or URL
+            $extension = $this->getExtensionFromContentType($contentType, $fbUrl, $attachmentType);
+
+            // Generate unique filename
+            $filename = 'fb_' . $messageId . '_' . time() . '.' . $extension;
+            $path = 'attachments/' . $conversationId . '/' . $filename;
+
+            // Store file
+            Storage::disk('public')->put($path, $fileContent);
+
+            // Generate local URL
+            $baseUrl = rtrim(config('app.url'), '/');
+            $localUrl = $baseUrl . '/files/' . $path;
+
+            Log::info('Attachment downloaded and stored', [
+                'message_id' => $messageId,
+                'path' => $path,
+                'type' => $attachmentType
+            ]);
+
+            return $localUrl;
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading attachment', [
+                'error' => $e->getMessage(),
+                'url' => substr($fbUrl, 0, 100) . '...'
+            ]);
+            return $fbUrl; // Fallback to Facebook URL on error
+        }
+    }
+
+    /**
+     * Get file extension from content type or URL
+     */
+    private function getExtensionFromContentType($contentType, $url, $attachmentType)
+    {
+        // Map content types to extensions
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'video/mp4' => 'mp4',
+            'video/quicktime' => 'mov',
+            'audio/mpeg' => 'mp3',
+            'audio/mp4' => 'm4a',
+            'audio/ogg' => 'ogg',
+            'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        ];
+
+        // Extract mime type (remove charset etc)
+        $mime = explode(';', $contentType)[0];
+        $mime = trim($mime);
+
+        if (isset($mimeMap[$mime])) {
+            return $mimeMap[$mime];
+        }
+
+        // Try to get from URL
+        $urlPath = parse_url($url, PHP_URL_PATH);
+        if ($urlPath) {
+            $ext = pathinfo($urlPath, PATHINFO_EXTENSION);
+            if ($ext && strlen($ext) <= 5) {
+                return $ext;
+            }
+        }
+
+        // Default based on attachment type
+        $defaults = [
+            'image' => 'jpg',
+            'video' => 'mp4',
+            'audio' => 'mp3',
+            'file' => 'bin',
+        ];
+
+        return $defaults[$attachmentType] ?? 'bin';
     }
 
     /**
