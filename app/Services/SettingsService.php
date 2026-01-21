@@ -108,12 +108,8 @@ class SettingsService
         foreach ($settings as $key => $value) {
             $setting = Setting::where('key', $key)->first();
             if ($setting) {
-                // Need to handle encryption manually for bulk update
-                if ($setting->is_encrypted && $value) {
-                    $setting->forceFill(['value' => \Illuminate\Support\Facades\Crypt::encryptString($value)]);
-                } else {
-                    $setting->forceFill(['value' => $value]);
-                }
+                // Use the model's setter which handles encryption automatically
+                $setting->value = $value;
                 $setting->save();
             }
         }
