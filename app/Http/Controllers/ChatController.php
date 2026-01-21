@@ -38,21 +38,19 @@ class ChatController extends Controller
 
             // First try to get from database
             $messages = Message::where('conversation_id', $conversationId)
-                ->orderBy('sent_at', 'desc')
+                ->orderBy('sent_at', 'asc')
+                ->orderBy('id', 'asc')
                 ->limit(100)
-                ->get()
-                ->reverse()
-                ->values();
+                ->get();
 
             // If no messages in DB, sync from Facebook
             if ($messages->isEmpty()) {
                 $this->syncMessagesFromFacebook($conversation);
                 $messages = Message::where('conversation_id', $conversationId)
-                    ->orderBy('sent_at', 'desc')
+                    ->orderBy('sent_at', 'asc')
+                    ->orderBy('id', 'asc')
                     ->limit(100)
-                    ->get()
-                    ->reverse()
-                    ->values();
+                    ->get();
             }
 
             // Mark conversation as read
