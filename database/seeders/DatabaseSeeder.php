@@ -21,5 +21,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed settings from .env values
+        $this->call(SettingsSeeder::class);
     }
 }

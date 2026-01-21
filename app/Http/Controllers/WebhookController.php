@@ -6,6 +6,7 @@ use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\FacebookPage;
+use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class WebhookController extends Controller
      */
     public function verify(Request $request)
     {
-        $verifyToken = config('services.facebook.verify_token', 'facebook_chat_manager_verify_token');
+        $verifyToken = SettingsService::get('FACEBOOK_WEBHOOK_VERIFY_TOKEN', config('services.facebook.verify_token', 'facebook_chat_manager_verify_token'));
 
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');

@@ -124,24 +124,25 @@
                 </div>
             </a>
 
-            <!-- Saved Chats -->
-            <a href="{{ route('saved-chats.index') }}"
+            <!-- Settings -->
+            <a href="{{ route('settings.index') }}"
                class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl
                       transition-all duration-200
-                      {{ $currentRoute === 'saved-chats.index' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                      {{ $currentRoute === 'settings.index' ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                 <div class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg
-                            {{ $currentRoute === 'saved-chats.index' ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-slate-200' }}
+                            {{ $currentRoute === 'settings.index' ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-slate-200' }}
                             transition-colors duration-200">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
                     </svg>
                 </div>
-                <span class="nav-text font-medium transition-opacity duration-200">Saved Chats</span>
+                <span class="nav-text font-medium transition-opacity duration-200">Settings</span>
                 <!-- Tooltip -->
                 <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
-                    Saved Chats
+                    Settings
                 </div>
             </a>
+
         </div>
     </nav>
 

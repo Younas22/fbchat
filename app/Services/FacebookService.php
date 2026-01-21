@@ -16,14 +16,19 @@ class FacebookService
         // Use custom cURL client with SSL verification disabled for local dev
         $customClient = new CustomFacebookCurlClient();
 
+        // Get settings from SettingsService with fallback to config
+        $appId = SettingsService::get('FACEBOOK_APP_ID', config('services.facebook.app_id'));
+        $appSecret = SettingsService::get('FACEBOOK_APP_SECRET', config('services.facebook.app_secret'));
+        $graphVersion = SettingsService::get('FACEBOOK_GRAPH_API_VERSION', config('services.facebook.graph_version'));
+
         $this->fb = new Facebook([
-            'app_id' => config('services.facebook.app_id'),
-            'app_secret' => config('services.facebook.app_secret'),
-            'default_graph_version' => config('services.facebook.graph_version'),
+            'app_id' => $appId,
+            'app_secret' => $appSecret,
+            'default_graph_version' => $graphVersion,
             'http_client_handler' => $customClient
         ]);
 
-        $this->accessToken = config('services.facebook.business_token');
+        $this->accessToken = SettingsService::get('FACEBOOK_BUSINESS_ACCOUNT_TOKEN', config('services.facebook.business_token'));
     }
 
     /**
@@ -32,11 +37,16 @@ class FacebookService
     public function getLongLivedToken($shortLivedToken)
     {
         try {
+            // Get settings from SettingsService with fallback to config
+            $graphVersion = SettingsService::get('FACEBOOK_GRAPH_API_VERSION', config('services.facebook.graph_version'));
+            $appId = SettingsService::get('FACEBOOK_APP_ID', config('services.facebook.app_id'));
+            $appSecret = SettingsService::get('FACEBOOK_APP_SECRET', config('services.facebook.app_secret'));
+
             // Use direct cURL instead of Facebook SDK for token exchange
-            $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/oauth/access_token?' . http_build_query([
+            $url = 'https://graph.facebook.com/' . $graphVersion . '/oauth/access_token?' . http_build_query([
                 'grant_type' => 'fb_exchange_token',
-                'client_id' => config('services.facebook.app_id'),
-                'client_secret' => config('services.facebook.app_secret'),
+                'client_id' => $appId,
+                'client_secret' => $appSecret,
                 'fb_exchange_token' => $shortLivedToken
             ]);
 
@@ -217,7 +227,8 @@ class FacebookService
     {
         try {
             // Use direct Graph API URL for sending messages
-            $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/me/messages';
+            $graphVersion = SettingsService::get('FACEBOOK_GRAPH_API_VERSION', config('services.facebook.graph_version'));
+            $url = 'https://graph.facebook.com/' . $graphVersion . '/me/messages';
 
             $data = [
                 'messaging_type' => 'RESPONSE',
@@ -264,7 +275,8 @@ class FacebookService
     public function sendAttachment($recipientId, $attachmentType, $attachmentUrl, $pageAccessToken, $localFilePath = null)
     {
         try {
-            $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/me/messages';
+            $graphVersion = SettingsService::get('FACEBOOK_GRAPH_API_VERSION', config('services.facebook.graph_version'));
+            $url = 'https://graph.facebook.com/' . $graphVersion . '/me/messages';
 
             // If we have a local file path, upload directly to Facebook
             if ($localFilePath && file_exists($localFilePath)) {
@@ -330,7 +342,8 @@ class FacebookService
     public function sendAttachmentByUpload($recipientId, $attachmentType, $localFilePath, $pageAccessToken)
     {
         try {
-            $url = 'https://graph.facebook.com/' . config('services.facebook.graph_version') . '/me/messages';
+            $graphVersion = SettingsService::get('FACEBOOK_GRAPH_API_VERSION', config('services.facebook.graph_version'));
+            $url = 'https://graph.facebook.com/' . $graphVersion . '/me/messages';
 
             // Get file info
             $filename = basename($localFilePath);

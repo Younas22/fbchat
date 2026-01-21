@@ -8,6 +8,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\SavedChatController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\SettingController;
 
 // Public routes with rate limiting
 Route::middleware('throttle:10,1')->group(function () {
@@ -48,4 +49,9 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/saved-chats', [SavedChatController::class, 'index']);
     Route::patch('/saved-chats/{savedChatId}', [SavedChatController::class, 'update']);
     Route::delete('/saved-chats/{savedChatId}', [SavedChatController::class, 'destroy']);
+
+    // Settings
+    Route::get('/settings', [SettingController::class, 'index']);
+    Route::post('/settings', [SettingController::class, 'update']);
+    Route::post('/settings/exchange-token', [SettingController::class, 'exchangeToken']);
 });

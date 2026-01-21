@@ -21,13 +21,9 @@ Route::get('/conversations/{pageId}', function ($pageId) {
     return view('conversations.index', ['pageId' => $pageId]);
 })->name('conversations.index');
 
-Route::get('/chat/{conversationId}', function ($conversationId) {
-    return view('chat.show', ['conversationId' => $conversationId]);
-})->name('chat.show');
-
-Route::get('/saved-chats', function () {
-    return view('saved-chats.index');
-})->name('saved-chats.index');
+Route::get('/settings', function () {
+    return view('settings.index');
+})->name('settings.index');
 
 // Meta App Required Pages
 Route::get('/privacy-policy', function () {

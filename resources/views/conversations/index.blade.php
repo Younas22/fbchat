@@ -193,13 +193,13 @@
                             </button>
 
                             <!-- Save Chat -->
-                            <button onclick="saveCurrentChat()"
+                            <!-- <button onclick="saveCurrentChat()"
                                     class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
                                 </svg>
                                 <span class="hidden sm:inline">Save</span>
-                            </button>
+                            </button> -->
 
                             <!-- Customer Details Toggle -->
                             <button id="detailsToggle"
@@ -440,44 +440,6 @@
                         <span class="text-sm">FB Profile ID not available</span>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Save Chat Modal -->
-<div id="saveChatModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeSaveModal()"></div>
-    <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all">
-            <div class="px-6 pt-6 pb-4">
-                <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                        <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-slate-900">Save Chat</h3>
-                        <p class="text-sm text-slate-500">Add notes to this conversation</p>
-                    </div>
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-100">
-                <textarea id="saveNotes"
-                          placeholder="Add notes about this conversation..."
-                          class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                          rows="4"></textarea>
-            </div>
-            <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex gap-3">
-                <button onclick="closeSaveModal()"
-                        class="flex-1 px-4 py-2.5 border border-slate-200 bg-white text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors">
-                    Cancel
-                </button>
-                <button onclick="confirmSave()"
-                        class="flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
-                    Save Chat
-                </button>
             </div>
         </div>
     </div>
@@ -1129,33 +1091,6 @@
             picker.classList.add('hidden');
         }
     });
-
-    // =============================================
-    // SAVE CHAT
-    // =============================================
-    function saveCurrentChat() {
-        if (!selectedConversationId) return;
-        document.getElementById('saveChatModal').classList.remove('hidden');
-    }
-
-    function closeSaveModal() {
-        document.getElementById('saveChatModal').classList.add('hidden');
-        document.getElementById('saveNotes').value = '';
-    }
-
-    async function confirmSave() {
-        const notes = document.getElementById('saveNotes').value;
-
-        try {
-            const res = await axios.post(`${API_BASE}/saved-chats/${selectedConversationId}`, { notes });
-            if (res.data.success) {
-                showToast('success', 'Chat saved successfully!');
-                closeSaveModal();
-            }
-        } catch (error) {
-            showToast('error', error.response?.data?.message || 'Failed to save chat');
-        }
-    }
 
     // =============================================
     // IMAGE MODAL

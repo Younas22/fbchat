@@ -433,7 +433,7 @@
 
             if (sortedRecent.length > 0) {
                 const recentHTML = sortedRecent.map(conv => `
-                    <a href="/chat/${conv.id}" class="block px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
+                    <a href="/conversations" class="block px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
                         <div class="flex items-center gap-4">
                             <div class="relative">
                                 <img src="${conv.customer_profile_pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(conv.customer_name || 'U') + '&size=44&background=random'}"
