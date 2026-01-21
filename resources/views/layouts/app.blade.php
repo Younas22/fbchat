@@ -33,6 +33,7 @@
             opacity: 1;
         }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 antialiased">
     <!-- Mobile Sidebar Overlay -->
