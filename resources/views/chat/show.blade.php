@@ -365,7 +365,12 @@
                 if (attachmentUrl && attachmentUrl.includes('/storage/')) {
                     attachmentUrl = attachmentUrl.replace('/storage/', '/files/');
                 }
-                const attachmentType = msg.attachment_type || null;
+
+                // Get attachment type - if null, try to detect from URL
+                let attachmentType = msg.attachment_type || null;
+                if (attachmentUrl && !attachmentType) {
+                    attachmentType = detectAttachmentType(attachmentUrl);
+                }
 
                 // Message status (seen, delivered, sent)
                 const status = msg.status || (isFromPage ? 'sent' : null);
@@ -538,6 +543,41 @@
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Detect attachment type from URL
+    function detectAttachmentType(url) {
+        if (!url) return null;
+
+        const lowerUrl = url.toLowerCase();
+
+        // Check for image extensions
+        if (lowerUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/)) {
+            return 'image';
+        }
+
+        // Check for video extensions
+        if (lowerUrl.match(/\.(mp4|mov|avi|wmv|webm|mkv)(\?|$)/)) {
+            return 'video';
+        }
+
+        // Check for audio extensions
+        if (lowerUrl.match(/\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/)) {
+            return 'audio';
+        }
+
+        // Check for document extensions
+        if (lowerUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)(\?|$)/)) {
+            return 'file';
+        }
+
+        // Check Facebook CDN patterns for images
+        if (lowerUrl.includes('scontent') && (lowerUrl.includes('.fbcdn.net') || lowerUrl.includes('.xx.fbcdn.net'))) {
+            return 'image';
+        }
+
+        // Default to file if we have a URL but can't determine type
+        return 'file';
     }
 
     // Format time in 12-hour format with AM/PM
