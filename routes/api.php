@@ -49,9 +49,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/chat/{conversationId}/sync', [ChatController::class, 'syncMessages'])->middleware('throttle:100,1');
 
     // Real-time polling endpoints (efficient - only fetch new data)
-    Route::get('/chat/{conversationId}/poll', [ChatController::class, 'pollNewMessages'])->middleware('throttle:120,1');
-    Route::get('/chat/unread-counts', [ChatController::class, 'getUnreadCounts'])->middleware('throttle:120,1');
-    Route::get('/chat/sidebar-updates', [ChatController::class, 'getSidebarUpdates'])->middleware('throttle:120,1');
+    // Higher limits for polling: 300 requests per minute to support frequent polling
+    Route::get('/chat/{conversationId}/poll', [ChatController::class, 'pollNewMessages'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
+    Route::get('/chat/unread-counts', [ChatController::class, 'getUnreadCounts'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
+    Route::get('/chat/sidebar-updates', [ChatController::class, 'getSidebarUpdates'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
 
     // Saved Chats
     Route::post('/saved-chats/{conversationId}', [SavedChatController::class, 'store']);

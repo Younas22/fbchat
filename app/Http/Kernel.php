@@ -52,7 +52,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
+            // Removed global throttle - using route-specific throttling instead
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
