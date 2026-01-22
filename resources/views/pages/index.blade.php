@@ -524,10 +524,11 @@
     async function confirmDelete() {
         if (!pageToDelete) return;
 
+        const pageId = pageToDelete;  // Save before closeDeleteModal resets it
         closeDeleteModal();
 
         try {
-            const res = await axios.delete(`${API_BASE}/pages/${pageToDelete}`);
+            const res = await axios.delete(`${API_BASE}/pages/${pageId}`);
             if (res.data.success) {
                 showToast('success', 'Page disconnected successfully');
                 loadPages();
@@ -535,8 +536,6 @@
         } catch (error) {
             showToast('error', 'Error: ' + (error.response?.data?.message || 'Failed to disconnect page'));
         }
-
-        pageToDelete = null;
     }
 
     // Simple toast notification
