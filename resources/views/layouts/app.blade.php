@@ -182,7 +182,7 @@
                 }
             );
 
-            // Auto-login for development
+            // Check if user is authenticated - show login modal if not
             async function ensureAuthenticated() {
                 let token = localStorage.getItem('token');
                 console.log('Current token in localStorage:', token ? 'exists' : 'not found');
@@ -191,13 +191,15 @@
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                     console.log('Testing existing token...');
-                    console.log('Header set for validation:', axios.defaults.headers.common['Authorization']);
 
                     try {
                         // Test token validity
                         const meResponse = await axios.get('/api/me');
                         console.log('Existing token is valid!', meResponse.data);
-                        console.log('Final header check:', axios.defaults.headers.common['Authorization']);
+                        // Update auth buttons
+                        if (typeof updateAuthButtons === 'function') {
+                            updateAuthButtons();
+                        }
                         return true;
                     } catch (error) {
                         console.log('Existing token is invalid, clearing it...', error.response?.status);
@@ -207,56 +209,37 @@
                     }
                 }
 
-                // No valid token, need to login/register
+                // No valid token - show login modal
                 if (!token) {
-                    console.log('No valid token found, attempting auto-login...');
-                    try {
-                        // Try to auto-login with default credentials
-                        console.log('Trying to login...');
-                        const response = await axios.post('/api/login', {
-                            email: 'admin@example.com',
-                            password: 'password'
-                        });
-
-                        token = response.data.token;
-                        localStorage.setItem('token', token);
-                        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                        console.log('Login successful! Token saved and set.');
-                        return true;
-                    } catch (error) {
-                        // If login fails, try to register
-                        console.log('Login failed, trying to register...', error.response?.data);
-                        try {
-                            const response = await axios.post('/api/register', {
-                                name: 'Admin',
-                                email: 'admin@example.com',
-                                password: 'password',
-                                password_confirmation: 'password'
-                            });
-
-                            token = response.data.token;
-                            localStorage.setItem('token', token);
-                            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                            console.log('Registration successful! Token saved and set.');
-                            return true;
-                        } catch (regError) {
-                            console.error('Auto-authentication failed:', regError.response?.data || regError);
-                            alert('Authentication failed. Please contact admin.');
-                            return false;
-                        }
+                    console.log('No valid token found, showing login modal...');
+                    showGlobalLoginModal();
+                    // Update auth buttons
+                    if (typeof updateAuthButtons === 'function') {
+                        updateAuthButtons();
                     }
+                    return false;
                 }
 
                 return false;
             }
 
+            // Show global login modal
+            function showGlobalLoginModal() {
+                const authModal = document.getElementById('authModal');
+                if (authModal) {
+                    authModal.classList.remove('hidden');
+                }
+            }
+
+            // Make it globally available
+            window.showGlobalLoginModal = showGlobalLoginModal;
+
             // Initialize auth on page load
             let authReady = false;
             ensureAuthenticated().then(success => {
-                authReady = success !== false;
+                authReady = success;
                 console.log('Authentication ready:', authReady);
                 console.log('API Base URL:', API_BASE);
-                console.log('Auth header after init:', axios.defaults.headers.common['Authorization']);
             });
 
             // Helper function to ensure API calls wait for auth

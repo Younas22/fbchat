@@ -26,6 +26,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     // Auth routes
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/update-password', [AuthController::class, 'updatePassword']);
 
     // Facebook Pages
     Route::get('/pages', [FacebookPageController::class, 'index']);

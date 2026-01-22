@@ -47,66 +47,9 @@
                                transition-all duration-200">
                     Sign In
                 </button>
-                <p class="text-center text-sm text-slate-500">
-                    Don't have an account?
-                    <button onclick="showRegister()" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
-                        Create one
-                    </button>
-                </p>
             </div>
         </div>
 
-        <!-- Register Form -->
-        <div id="registerForm" class="hidden">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
-                    <input type="text" id="registerName"
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
-                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                                  transition-all duration-200 outline-none"
-                           placeholder="John Doe">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-                    <input type="email" id="registerEmail"
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
-                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                                  transition-all duration-200 outline-none"
-                           placeholder="your@email.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
-                    <input type="password" id="registerPassword"
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
-                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                                  transition-all duration-200 outline-none"
-                           placeholder="Create a password">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
-                    <input type="password" id="registerPasswordConfirmation"
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
-                                  focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500
-                                  transition-all duration-200 outline-none"
-                           placeholder="Confirm your password">
-                </div>
-                <button onclick="register()"
-                        class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600
-                               text-white font-semibold rounded-xl
-                               hover:from-blue-700 hover:to-indigo-700
-                               shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40
-                               transition-all duration-200">
-                    Create Account
-                </button>
-                <p class="text-center text-sm text-slate-500">
-                    Already have an account?
-                    <button onclick="showLogin()" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
-                        Sign in
-                    </button>
-                </p>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -247,22 +190,6 @@
         return true;
     }
 
-    function showLogin() {
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginForm').classList.remove('hidden');
-        // Update modal text
-        document.querySelector('#authModal h3').textContent = 'Welcome Back';
-        document.querySelector('#authModal h3 + p').textContent = 'Sign in to continue to FB Chat Manager';
-    }
-
-    function showRegister() {
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('registerForm').classList.remove('hidden');
-        // Update modal text
-        document.querySelector('#authModal h3').textContent = 'Create Account';
-        document.querySelector('#authModal h3 + p').textContent = 'Join FB Chat Manager today';
-    }
-
     async function login() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
@@ -283,41 +210,6 @@
             }
         } catch (error) {
             alert('Login failed: ' + (error.response?.data?.message || 'Invalid credentials'));
-        }
-    }
-
-    async function register() {
-        const name = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-        const passwordConfirmation = document.getElementById('registerPasswordConfirmation').value;
-
-        if (!name || !email || !password || !passwordConfirmation) {
-            alert('Please fill all fields');
-            return;
-        }
-
-        if (password !== passwordConfirmation) {
-            alert('Passwords do not match');
-            return;
-        }
-
-        try {
-            const response = await axios.post(`${API_BASE}/register`, {
-                name,
-                email,
-                password,
-                password_confirmation: passwordConfirmation
-            });
-
-            if (response.data.success) {
-                localStorage.setItem('token', response.data.token);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                document.getElementById('authModal').classList.add('hidden');
-                location.reload();
-            }
-        } catch (error) {
-            alert('Registration failed: ' + (error.response?.data?.message || 'Please try again'));
         }
     }
 
