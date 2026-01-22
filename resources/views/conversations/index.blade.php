@@ -1124,9 +1124,28 @@
     function formatTimestamp(dateString) {
         if (!dateString) return '';
 
-        const date = new Date(dateString);
+        // Parse the date - handle various formats
+        let date;
+        if (dateString.includes('T') || dateString.includes('Z')) {
+            // ISO format - already in UTC
+            date = new Date(dateString);
+        } else {
+            // Assume it's a local time string from Laravel (Y-m-d H:i:s format)
+            // Convert to ISO format for proper parsing
+            date = new Date(dateString.replace(' ', 'T') + 'Z');
+        }
+
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+
         const now = new Date();
         const diffMs = now - date;
+
+        // Handle future dates (shouldn't happen but just in case)
+        if (diffMs < 0) return 'Just now';
+
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
@@ -1140,7 +1159,24 @@
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
-    function formatTime12Hour(date) {
+    function formatTime12Hour(dateInput) {
+        let date;
+        if (typeof dateInput === 'string') {
+            // Parse string date
+            if (dateInput.includes('T') || dateInput.includes('Z')) {
+                date = new Date(dateInput);
+            } else {
+                date = new Date(dateInput.replace(' ', 'T') + 'Z');
+            }
+        } else {
+            date = dateInput;
+        }
+
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+
         let hours = date.getHours();
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -1250,6 +1286,7 @@
     let messagePollingInterval = null;
     let sidebarPollingInterval = null;
     let isPollingMessages = false;
+    let isPollingSidebar = false;
     let isInitialLoad = true;
 
     // Notification sound
@@ -1263,8 +1300,9 @@
             clearInterval(messagePollingInterval);
         }
 
-        // Poll every 3 seconds for new messages
-        messagePollingInterval = setInterval(pollNewMessages, 3000);
+        // Poll immediately first, then every 1.5 seconds for faster real-time feel
+        pollNewMessages();
+        messagePollingInterval = setInterval(pollNewMessages, 1500);
     }
 
     /**
@@ -1291,21 +1329,31 @@
             if (res.data.success && res.data.has_new) {
                 // Append new messages to the list
                 const newMessages = res.data.data;
-                messages = [...messages, ...newMessages];
 
-                // Update last message ID
-                if (newMessages.length > 0) {
-                    lastMessageId = newMessages[newMessages.length - 1].id;
-                }
+                // Filter out messages that already exist (by message_id to avoid duplicates)
+                const existingMessageIds = new Set(messages.map(m => m.message_id));
+                const uniqueNewMessages = newMessages.filter(m => !existingMessageIds.has(m.message_id));
 
-                // Re-render messages and scroll to bottom
-                renderMessages();
-                scrollToBottom();
+                if (uniqueNewMessages.length > 0) {
+                    messages = [...messages, ...uniqueNewMessages];
 
-                // Play notification sound for customer messages
-                const customerMessages = newMessages.filter(m => m.sender_type === 'customer');
-                if (customerMessages.length > 0 && !isInitialLoad) {
-                    playNotificationSound();
+                    // Update last message ID
+                    lastMessageId = Math.max(...messages.map(m => m.id));
+
+                    // Re-render messages and scroll to bottom
+                    renderMessages();
+                    scrollToBottom();
+
+                    // Play notification sound for customer messages
+                    const customerMessages = uniqueNewMessages.filter(m => m.sender_type === 'customer');
+                    if (customerMessages.length > 0 && !isInitialLoad) {
+                        playNotificationSound();
+                    }
+
+                    // Update conversation in sidebar
+                    if (res.data.conversation) {
+                        updateCurrentConversationInSidebar(res.data.conversation);
+                    }
                 }
             }
         } catch (error) {
@@ -1317,6 +1365,22 @@
     }
 
     /**
+     * Update current conversation in sidebar after receiving new messages
+     */
+    function updateCurrentConversationInSidebar(convData) {
+        const idx = conversations.findIndex(c => c.id === selectedConversationId);
+        if (idx >= 0) {
+            conversations[idx] = {
+                ...conversations[idx],
+                last_message_preview: convData.last_message_preview,
+                last_message_time: convData.last_message_time,
+                unread_count: 0 // Current conversation is being viewed
+            };
+            renderConversations();
+        }
+    }
+
+    /**
      * Start sidebar polling for unread counts and new conversations
      */
     function startSidebarPolling() {
@@ -1324,24 +1388,22 @@
             clearInterval(sidebarPollingInterval);
         }
 
-        // Poll every 5 seconds for sidebar updates
-        sidebarPollingInterval = setInterval(pollSidebarUpdates, 5000);
+        // Poll immediately first, then every 2 seconds for faster notifications
+        pollSidebarUpdates();
+        sidebarPollingInterval = setInterval(pollSidebarUpdates, 2000);
     }
 
     /**
      * Poll for sidebar updates (unread counts, new messages in other conversations)
+     * Polls ALL pages to catch messages from any conversation
      */
     async function pollSidebarUpdates() {
-        try {
-            const params = new URLSearchParams();
-            if (selectedPageId && selectedPageId !== 'all') {
-                params.append('page_id', selectedPageId);
-            }
-            if (lastPollTime) {
-                params.append('since', lastPollTime);
-            }
+        if (isPollingSidebar) return;
+        isPollingSidebar = true;
 
-            const res = await axios.get(`${API_BASE}/chat/sidebar-updates?${params.toString()}`);
+        try {
+            // Always poll all pages for notifications, regardless of selected page filter
+            const res = await axios.get(`${API_BASE}/chat/sidebar-updates`);
 
             if (res.data.success) {
                 // Update last poll time
@@ -1352,11 +1414,13 @@
                     updateConversationsFromPoll(res.data.updated_conversations);
                 }
 
-                // Update total unread badge in header if needed
+                // Update total unread badge in header
                 updateTotalUnreadBadge(res.data.total_unread);
             }
         } catch (error) {
             console.error('Sidebar polling error:', error);
+        } finally {
+            isPollingSidebar = false;
         }
     }
 
@@ -1365,6 +1429,7 @@
      */
     function updateConversationsFromPoll(updatedConvs) {
         let hasChanges = false;
+        let hasNewUnread = false;
 
         updatedConvs.forEach(update => {
             const existingIndex = conversations.findIndex(c => c.id === update.id);
@@ -1372,36 +1437,49 @@
             if (existingIndex >= 0) {
                 // Update existing conversation
                 const existing = conversations[existingIndex];
+
+                // Check if there are new unread messages (not in currently selected conversation)
+                if (update.unread_count > existing.unread_count && update.id !== selectedConversationId) {
+                    hasNewUnread = true;
+                }
+
+                // Check if anything changed
                 if (existing.unread_count !== update.unread_count ||
                     existing.last_message_preview !== update.last_message_preview ||
                     existing.last_message_time !== update.last_message_time) {
 
+                    // If this is the currently selected conversation, keep unread at 0
+                    const unreadCount = update.id === selectedConversationId ? 0 : update.unread_count;
+
                     conversations[existingIndex] = {
                         ...existing,
-                        unread_count: update.unread_count,
+                        unread_count: unreadCount,
                         last_message_preview: update.last_message_preview,
                         last_message_time: update.last_message_time,
                         customer_name: update.customer_name || existing.customer_name,
                         customer_profile_pic: update.customer_profile_pic || existing.customer_profile_pic
                     };
                     hasChanges = true;
-
-                    // Play sound for new unread messages (not in currently selected conversation)
-                    if (update.unread_count > existing.unread_count && update.id !== selectedConversationId) {
-                        playNotificationSound();
-                    }
                 }
             } else {
-                // New conversation - add to list
-                const page = pages.find(p => p.id == update.page_id);
-                conversations.unshift({
-                    ...update,
-                    page_name: page?.page_name || 'Unknown Page'
-                });
-                hasChanges = true;
-                playNotificationSound();
+                // New conversation - add to list if it matches current filter
+                const matchesFilter = selectedPageId === 'all' || update.page_id == selectedPageId;
+                if (matchesFilter) {
+                    const page = pages.find(p => p.id == update.page_id);
+                    conversations.unshift({
+                        ...update,
+                        page_name: page?.page_name || 'Unknown Page'
+                    });
+                    hasChanges = true;
+                    hasNewUnread = true;
+                }
             }
         });
+
+        // Play sound only once for new unread messages
+        if (hasNewUnread) {
+            playNotificationSound();
+        }
 
         if (hasChanges) {
             // Re-sort by last_message_time
@@ -1448,9 +1526,16 @@
 
         // Update lastMessageId from loaded messages
         if (messages.length > 0) {
-            lastMessageId = messages[messages.length - 1].id;
+            lastMessageId = Math.max(...messages.map(m => m.id));
         } else {
             lastMessageId = 0;
+        }
+
+        // Mark this conversation as read in sidebar
+        const convIdx = conversations.findIndex(c => c.id === conversationId);
+        if (convIdx >= 0 && conversations[convIdx].unread_count > 0) {
+            conversations[convIdx].unread_count = 0;
+            renderConversations();
         }
 
         // Start polling for this conversation
@@ -1468,15 +1553,88 @@
     };
 
     /**
-     * Override sendMessage to update lastMessageId after sending
+     * Override sendMessage to immediately show sent message
      */
     const originalSendMessage = sendMessage;
     sendMessage = async function() {
-        await originalSendMessage();
+        const input = document.getElementById('messageInput');
+        const messageText = input.value.trim();
+        const hasFile = selectedFile !== null;
 
-        // Update lastMessageId from messages after send
-        if (messages.length > 0) {
-            lastMessageId = messages[messages.length - 1].id;
+        if (!messageText && !hasFile) return;
+        if (!selectedConversationId) return;
+
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
+
+        // Optimistically add message to UI immediately
+        const tempId = 'temp_' + Date.now();
+        const tempMessage = {
+            id: tempId,
+            message_id: tempId,
+            conversation_id: selectedConversationId,
+            message_text: messageText || null,
+            sender_type: 'page',
+            status: 'sending',
+            sent_at: new Date().toISOString(),
+            attachment_type: selectedFileType,
+            attachment_url: selectedFile ? URL.createObjectURL(selectedFile) : null,
+            _isTemp: true
+        };
+
+        // Add to messages and render immediately
+        messages.push(tempMessage);
+        renderMessages();
+        scrollToBottom();
+
+        // Clear input immediately for better UX
+        input.value = '';
+        input.style.height = 'auto';
+        const fileToSend = selectedFile;
+        const fileTypeToSend = selectedFileType;
+        clearAttachment();
+
+        try {
+            let res;
+
+            if (fileToSend) {
+                const formData = new FormData();
+                formData.append('message', messageText || ' ');
+                formData.append('attachment', fileToSend);
+                formData.append('attachment_type', fileTypeToSend);
+
+                res = await axios.post(`${API_BASE}/chat/${selectedConversationId}/send`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            } else {
+                res = await axios.post(`${API_BASE}/chat/${selectedConversationId}/send`, { message: messageText });
+            }
+
+            if (res.data.success) {
+                // Replace temp message with real one
+                const tempIdx = messages.findIndex(m => m.id === tempId);
+                if (tempIdx >= 0) {
+                    messages[tempIdx] = res.data.data;
+                }
+
+                // Update lastMessageId
+                lastMessageId = Math.max(...messages.map(m => typeof m.id === 'number' ? m.id : 0));
+
+                renderMessages();
+                scrollToBottom();
+            } else {
+                // Remove temp message on failure
+                messages = messages.filter(m => m.id !== tempId);
+                renderMessages();
+                showToast('error', res.data.message || 'Failed to send message');
+            }
+        } catch (error) {
+            // Remove temp message on error
+            messages = messages.filter(m => m.id !== tempId);
+            renderMessages();
+            showToast('error', error.response?.data?.message || 'Failed to send message');
+        } finally {
+            sendBtn.disabled = false;
         }
     };
 
@@ -1488,6 +1646,6 @@
     // Start sidebar polling after init
     setTimeout(() => {
         startSidebarPolling();
-    }, 2000);
+    }, 1000);
 </script>
 @endsection

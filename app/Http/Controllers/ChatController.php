@@ -638,47 +638,48 @@ class ChatController extends Controller
     /**
      * Get sidebar updates - conversations with changed unread counts or new messages
      * Now includes Facebook sync for real-time updates without webhook dependency
+     * Syncs ALL pages to ensure notifications work for all conversations
      */
     public function getSidebarUpdates(Request $request)
     {
         try {
             $userId = Auth::id();
-            $pageId = $request->query('page_id'); // Optional - filter by page
+            $pageId = $request->query('page_id'); // Optional - filter by page for display
             $since = $request->query('since'); // ISO timestamp of last poll
 
-            // Sync conversations from Facebook for real-time updates
-            if ($pageId && $pageId !== 'all') {
+            // Sync conversations from ALL pages for real-time updates
+            // This ensures we catch messages from any conversation, not just the selected page
+            $userPages = FacebookPage::where('user_id', $userId)->get();
+            foreach ($userPages as $page) {
                 try {
-                    $this->syncConversationsFromFacebook($pageId, $userId);
+                    $this->syncConversationsFromFacebook($page->id, $userId);
                 } catch (\Exception $syncError) {
                     Log::warning('Facebook conversations sync during sidebar poll failed', [
-                        'page_id' => $pageId,
+                        'page_id' => $page->id,
                         'error' => $syncError->getMessage()
                     ]);
                 }
             }
 
+            // Build query for conversations
             $query = Conversation::where('user_id', $userId)
                 ->select('id', 'page_id', 'customer_name', 'customer_profile_pic', 'unread_count', 'last_message_preview', 'last_message_time');
 
-            // Filter by page if specified
+            // Filter by page if specified (for display filtering only)
             if ($pageId && $pageId !== 'all') {
                 $query->where('page_id', $pageId);
             }
 
-            // Only get conversations updated since last poll
+            // Only get conversations updated since last poll (if provided)
             if ($since) {
                 $query->where('last_message_time', '>', $since);
             }
 
             $conversations = $query->orderBy('last_message_time', 'desc')->get();
 
-            // Calculate total unread for all conversations (not just filtered)
-            $totalUnreadQuery = Conversation::where('user_id', $userId);
-            if ($pageId && $pageId !== 'all') {
-                $totalUnreadQuery->where('page_id', $pageId);
-            }
-            $totalUnread = $totalUnreadQuery->sum('unread_count');
+            // Calculate total unread for ALL conversations (regardless of filter)
+            // This ensures the unread badge shows total unread from all pages
+            $totalUnread = Conversation::where('user_id', $userId)->sum('unread_count');
 
             return response()->json([
                 'success' => true,
