@@ -534,8 +534,8 @@ class ChatController extends Controller
     }
 
     /**
-     * Poll for new messages since a given message ID (efficient real-time polling)
-     * Only returns messages newer than the last known message - no full refetch
+     * Poll for new messages since a given message ID (with Facebook sync)
+     * First syncs from Facebook API, then returns messages newer than last known
      */
     public function pollNewMessages(Request $request, $conversationId)
     {
@@ -551,6 +551,18 @@ class ChatController extends Controller
 
             // Get last message ID from client
             $lastMessageId = $request->query('last_message_id', 0);
+
+            // Sync latest messages from Facebook (limit to 10 for efficiency)
+            // This ensures we get new messages even without webhook
+            try {
+                $this->syncMessagesFromFacebook($conversation, 10);
+            } catch (\Exception $syncError) {
+                // Log but don't fail - still return cached messages
+                Log::warning('Facebook sync during poll failed', [
+                    'conversation_id' => $conversationId,
+                    'error' => $syncError->getMessage()
+                ]);
+            }
 
             // Fetch only messages newer than the last known message
             $newMessages = Message::where('conversation_id', $conversationId)
@@ -625,7 +637,7 @@ class ChatController extends Controller
 
     /**
      * Get sidebar updates - conversations with changed unread counts or new messages
-     * Efficient polling for conversation sidebar updates
+     * Now includes Facebook sync for real-time updates without webhook dependency
      */
     public function getSidebarUpdates(Request $request)
     {
@@ -633,6 +645,18 @@ class ChatController extends Controller
             $userId = Auth::id();
             $pageId = $request->query('page_id'); // Optional - filter by page
             $since = $request->query('since'); // ISO timestamp of last poll
+
+            // Sync conversations from Facebook for real-time updates
+            if ($pageId && $pageId !== 'all') {
+                try {
+                    $this->syncConversationsFromFacebook($pageId, $userId);
+                } catch (\Exception $syncError) {
+                    Log::warning('Facebook conversations sync during sidebar poll failed', [
+                        'page_id' => $pageId,
+                        'error' => $syncError->getMessage()
+                    ]);
+                }
+            }
 
             $query = Conversation::where('user_id', $userId)
                 ->select('id', 'page_id', 'customer_name', 'customer_profile_pic', 'unread_count', 'last_message_preview', 'last_message_time');
@@ -668,6 +692,92 @@ class ChatController extends Controller
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Sync conversations from Facebook for a specific page
+     * Used by sidebar polling for real-time updates
+     */
+    private function syncConversationsFromFacebook($pageId, $userId)
+    {
+        $page = FacebookPage::where('id', $pageId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$page) {
+            return;
+        }
+
+        // Get recent conversations from Facebook (limit 10 for efficiency)
+        $fbConversations = $this->facebookService->getPageConversations(
+            $page->page_access_token,
+            10
+        );
+
+        foreach ($fbConversations as $fbConv) {
+            // Find or create conversation
+            $conversation = Conversation::where('conversation_id', $fbConv['id'])->first();
+
+            if (!$conversation) {
+                // Extract customer info from senders
+                $customerName = 'Customer';
+                $customerPsid = null;
+                $customerProfilePic = null;
+
+                if (isset($fbConv['senders']['data'])) {
+                    foreach ($fbConv['senders']['data'] as $sender) {
+                        if ($sender['id'] !== $page->page_id) {
+                            $customerName = $sender['name'] ?? 'Customer';
+                            $customerPsid = $sender['id'];
+                            $customerProfilePic = $sender['picture']['data']['url'] ?? null;
+                            break;
+                        }
+                    }
+                }
+
+                // Get last message preview
+                $lastMessage = null;
+                $lastMessageTime = $fbConv['updated_time'] ?? now();
+                if (isset($fbConv['messages']['data'][0])) {
+                    $lastMsg = $fbConv['messages']['data'][0];
+                    $lastMessage = $lastMsg['message'] ?? '[Attachment]';
+                    $lastMessageTime = $lastMsg['created_time'] ?? $lastMessageTime;
+                }
+
+                Conversation::create([
+                    'user_id' => $userId,
+                    'page_id' => $page->id,
+                    'conversation_id' => $fbConv['id'],
+                    'customer_name' => $customerName,
+                    'customer_psid' => $customerPsid,
+                    'customer_profile_pic' => $customerProfilePic,
+                    'last_message_preview' => $lastMessage,
+                    'last_message_time' => $lastMessageTime,
+                    'is_archived' => false,
+                    'unread_count' => 1,
+                ]);
+            } else {
+                // Update existing conversation's last message if newer
+                if (isset($fbConv['messages']['data'][0])) {
+                    $lastMsg = $fbConv['messages']['data'][0];
+                    $fbTime = isset($lastMsg['created_time']) ? strtotime($lastMsg['created_time']) : 0;
+                    $dbTime = $conversation->last_message_time ? strtotime($conversation->last_message_time) : 0;
+
+                    if ($fbTime > $dbTime) {
+                        $conversation->update([
+                            'last_message_preview' => $lastMsg['message'] ?? '[Attachment]',
+                            'last_message_time' => $lastMsg['created_time'],
+                        ]);
+
+                        // Check if this is a customer message and increment unread
+                        $senderId = $lastMsg['from']['id'] ?? null;
+                        if ($senderId && $senderId !== $page->page_id) {
+                            $conversation->increment('unread_count');
+                        }
+                    }
+                }
+            }
         }
     }
 }

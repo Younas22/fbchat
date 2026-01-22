@@ -122,7 +122,7 @@ class FacebookService
     {
         try {
             $response = $this->fb->get(
-                '/me/conversations?fields=id,senders{name,id,picture},subject,updated_time,former_participants&limit=' . $limit,
+                '/me/conversations?fields=id,senders{name,id,picture},subject,updated_time,former_participants,messages.limit(1){message,created_time,from}&limit=' . $limit,
                 $pageAccessToken
             );
 
