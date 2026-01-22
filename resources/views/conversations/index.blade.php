@@ -1333,10 +1333,15 @@
      */
     async function pollSidebarUpdates() {
         try {
-            const pageParam = selectedPageId !== 'all' ? `&page_id=${selectedPageId}` : '';
-            const sinceParam = lastPollTime ? `&since=${lastPollTime}` : '';
+            const params = new URLSearchParams();
+            if (selectedPageId && selectedPageId !== 'all') {
+                params.append('page_id', selectedPageId);
+            }
+            if (lastPollTime) {
+                params.append('since', lastPollTime);
+            }
 
-            const res = await axios.get(`${API_BASE}/chat/sidebar-updates?${pageParam}${sinceParam}`);
+            const res = await axios.get(`${API_BASE}/chat/sidebar-updates?${params.toString()}`);
 
             if (res.data.success) {
                 // Update last poll time

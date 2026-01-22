@@ -43,16 +43,16 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::patch('/conversations/{conversationId}/archive', [ConversationController::class, 'archive']);
     Route::patch('/conversations/{conversationId}/unarchive', [ConversationController::class, 'unarchive']);
 
-    // Chat Messages
+    // Real-time polling endpoints (must be BEFORE dynamic routes!)
+    // Higher limits for polling: 300 requests per minute to support frequent polling
+    Route::get('/chat/unread-counts', [ChatController::class, 'getUnreadCounts'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
+    Route::get('/chat/sidebar-updates', [ChatController::class, 'getSidebarUpdates'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
+
+    // Chat Messages (dynamic routes AFTER static routes)
     Route::get('/chat/{conversationId}/messages', [ChatController::class, 'getMessages']);
     Route::post('/chat/{conversationId}/send', [ChatController::class, 'sendMessage'])->middleware('throttle:100,1');
     Route::post('/chat/{conversationId}/sync', [ChatController::class, 'syncMessages'])->middleware('throttle:100,1');
-
-    // Real-time polling endpoints (efficient - only fetch new data)
-    // Higher limits for polling: 300 requests per minute to support frequent polling
     Route::get('/chat/{conversationId}/poll', [ChatController::class, 'pollNewMessages'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
-    Route::get('/chat/unread-counts', [ChatController::class, 'getUnreadCounts'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
-    Route::get('/chat/sidebar-updates', [ChatController::class, 'getSidebarUpdates'])->withoutMiddleware('throttle:60,1')->middleware('throttle:300,1');
 
     // Saved Chats
     Route::post('/saved-chats/{conversationId}', [SavedChatController::class, 'store']);
