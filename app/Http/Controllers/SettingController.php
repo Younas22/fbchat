@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Services\CustomFacebookCurlClient;
 use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -135,11 +136,13 @@ class SettingController extends Controller
                 ], 400);
             }
 
-            // Initialize Facebook SDK directly for token exchange
+            // Initialize Facebook SDK with custom client that disables SSL verification
+            $customClient = new CustomFacebookCurlClient();
             $fb = new \Facebook\Facebook([
                 'app_id' => $appId,
                 'app_secret' => $appSecret,
                 'default_graph_version' => SettingsService::get('FACEBOOK_GRAPH_API_VERSION', 'v19.0'),
+                'http_client_handler' => $customClient,
             ]);
 
             $output = [];
