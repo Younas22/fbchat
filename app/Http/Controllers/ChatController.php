@@ -532,4 +532,142 @@ class ChatController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Poll for new messages since a given message ID (efficient real-time polling)
+     * Only returns messages newer than the last known message - no full refetch
+     */
+    public function pollNewMessages(Request $request, $conversationId)
+    {
+        try {
+            $conversation = Conversation::find($conversationId);
+
+            if (!$conversation || $conversation->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Conversation not found'
+                ], 404);
+            }
+
+            // Get last message ID from client
+            $lastMessageId = $request->query('last_message_id', 0);
+
+            // Fetch only messages newer than the last known message
+            $newMessages = Message::where('conversation_id', $conversationId)
+                ->where('id', '>', $lastMessageId)
+                ->orderBy('sent_at', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'has_new' => $newMessages->count() > 0,
+                'count' => $newMessages->count(),
+                'data' => $newMessages,
+                'conversation' => [
+                    'unread_count' => $conversation->unread_count ?? 0,
+                    'last_message_time' => $conversation->last_message_time,
+                    'last_message_preview' => $conversation->last_message_preview,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get unread counts for all conversations (efficient dashboard polling)
+     * Returns minimal data - just conversation IDs with their unread counts
+     */
+    public function getUnreadCounts(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Get all conversations with unread messages
+            $conversations = Conversation::where('user_id', $userId)
+                ->select('id', 'page_id', 'customer_name', 'customer_profile_pic', 'unread_count', 'last_message_preview', 'last_message_time')
+                ->orderBy('last_message_time', 'desc')
+                ->get();
+
+            // Calculate total unread
+            $totalUnread = $conversations->sum('unread_count');
+
+            // Get conversations with unread > 0
+            $unreadConversations = $conversations->where('unread_count', '>', 0)->values();
+
+            return response()->json([
+                'success' => true,
+                'total_unread' => $totalUnread,
+                'unread_conversations' => $unreadConversations,
+                'conversations_updated' => $conversations->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'page_id' => $c->page_id,
+                        'unread_count' => $c->unread_count,
+                        'last_message_time' => $c->last_message_time,
+                        'last_message_preview' => $c->last_message_preview,
+                    ];
+                })
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get sidebar updates - conversations with changed unread counts or new messages
+     * Efficient polling for conversation sidebar updates
+     */
+    public function getSidebarUpdates(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $pageId = $request->query('page_id'); // Optional - filter by page
+            $since = $request->query('since'); // ISO timestamp of last poll
+
+            $query = Conversation::where('user_id', $userId)
+                ->select('id', 'page_id', 'customer_name', 'customer_profile_pic', 'unread_count', 'last_message_preview', 'last_message_time');
+
+            // Filter by page if specified
+            if ($pageId && $pageId !== 'all') {
+                $query->where('page_id', $pageId);
+            }
+
+            // Only get conversations updated since last poll
+            if ($since) {
+                $query->where('last_message_time', '>', $since);
+            }
+
+            $conversations = $query->orderBy('last_message_time', 'desc')->get();
+
+            // Calculate total unread for all conversations (not just filtered)
+            $totalUnreadQuery = Conversation::where('user_id', $userId);
+            if ($pageId && $pageId !== 'all') {
+                $totalUnreadQuery->where('page_id', $pageId);
+            }
+            $totalUnread = $totalUnreadQuery->sum('unread_count');
+
+            return response()->json([
+                'success' => true,
+                'total_unread' => $totalUnread,
+                'updated_conversations' => $conversations,
+                'server_time' => now()->toISOString()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

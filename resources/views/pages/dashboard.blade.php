@@ -402,7 +402,133 @@
     // Load on page load
     loadDashboard();
 
-    // Refresh every 30 seconds
-    setInterval(loadDashboard, 30000);
+    // =============================================
+    // EFFICIENT REAL-TIME POLLING FOR DASHBOARD
+    // =============================================
+    let lastUnreadCount = 0;
+    let dashboardPollingInterval = null;
+
+    // Notification sound
+    const dashboardNotificationSound = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAGAAGn9AAAIwiszv8wIBQhMgJ5dxjGMkAYBAYHA4fygIAgCD4Pg+D5//y4Pg+D4f/ygIAmD4Pn///5QEHwfB8HygIP/KAgICAhCAhCAIBAZB8HwfB8H/lAQCAhiAQEP/9YxDAMg+c5//6wfOc5znOc/8uAgIAgEAQBAEMg+D5znOc5/5cBAEAgCAIAgEP+sY5z//1g+c5znP/+XAQBAICAIYhkHwfP/rB8HwfB8HwfB8=');
+
+    /**
+     * Poll for unread count updates (efficient - only fetches counts, not full data)
+     */
+    async function pollUnreadCounts() {
+        try {
+            const res = await axios.get(`${API_BASE}/chat/unread-counts`);
+
+            if (res.data.success) {
+                const newUnreadCount = res.data.total_unread;
+
+                // Update the unread count display
+                document.getElementById('unreadMessages').textContent = newUnreadCount;
+
+                // Play notification sound if unread count increased
+                if (newUnreadCount > lastUnreadCount && lastUnreadCount !== 0) {
+                    playDashboardNotification();
+                    showNewMessageToast(newUnreadCount - lastUnreadCount);
+                }
+
+                lastUnreadCount = newUnreadCount;
+
+                // Update page title with unread count
+                updatePageTitle(newUnreadCount);
+
+                // Update recent conversations if there are unread ones
+                if (res.data.unread_conversations && res.data.unread_conversations.length > 0) {
+                    updateRecentConversationsUnread(res.data.unread_conversations);
+                }
+            }
+        } catch (error) {
+            console.error('Unread count polling error:', error);
+        }
+    }
+
+    /**
+     * Update page title with unread count
+     */
+    function updatePageTitle(unreadCount) {
+        const baseTitle = 'Dashboard - Facebook Chat Manager';
+        if (unreadCount > 0) {
+            document.title = `(${unreadCount}) ${baseTitle}`;
+        } else {
+            document.title = baseTitle;
+        }
+    }
+
+    /**
+     * Play notification sound
+     */
+    function playDashboardNotification() {
+        try {
+            dashboardNotificationSound.currentTime = 0;
+            dashboardNotificationSound.volume = 0.5;
+            dashboardNotificationSound.play().catch(() => {});
+        } catch (e) {}
+    }
+
+    /**
+     * Show toast for new messages
+     */
+    function showNewMessageToast(count) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 transform transition-all duration-300 cursor-pointer';
+        toast.onclick = () => window.location.href = '/conversations';
+        toast.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span class="text-sm font-medium">${count} new message${count > 1 ? 's' : ''} - Click to view</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    /**
+     * Update recent conversations with unread badges
+     */
+    function updateRecentConversationsUnread(unreadConversations) {
+        unreadConversations.forEach(conv => {
+            const convElement = document.querySelector(`[data-conversation-id="${conv.id}"]`);
+            if (convElement) {
+                // Update unread badge
+                let badge = convElement.querySelector('.unread-badge');
+                if (conv.unread_count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'unread-badge absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white';
+                        const imgContainer = convElement.querySelector('.relative');
+                        if (imgContainer) imgContainer.appendChild(badge);
+                    }
+                } else if (badge) {
+                    badge.remove();
+                }
+            }
+        });
+    }
+
+    /**
+     * Start efficient polling (5 second intervals for unread counts)
+     */
+    function startDashboardPolling() {
+        // Initial poll
+        pollUnreadCounts();
+
+        // Poll every 5 seconds for unread counts (lightweight)
+        dashboardPollingInterval = setInterval(pollUnreadCounts, 5000);
+
+        // Full dashboard refresh every 60 seconds (heavier operation)
+        setInterval(loadDashboard, 60000);
+    }
+
+    // Start polling after initial load
+    setTimeout(startDashboardPolling, 2000);
 </script>
 @endsection

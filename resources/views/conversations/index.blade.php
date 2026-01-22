@@ -1243,8 +1243,246 @@
     }
 
     // =============================================
+    // REAL-TIME POLLING SYSTEM
+    // =============================================
+    let lastMessageId = 0;
+    let lastPollTime = null;
+    let messagePollingInterval = null;
+    let sidebarPollingInterval = null;
+    let isPollingMessages = false;
+    let isInitialLoad = true;
+
+    // Notification sound
+    const notificationSound = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAGAAGn9AAAIwiszv8wIBQhMgJ5dxjGMkAYBAYHA4fygIAgCD4Pg+D5//y4Pg+D4f/ygIAmD4Pn///5QEHwfB8HygIP/KAgICAhCAhCAIBAZB8HwfB8H/lAQCAhiAQEP/9YxDAMg+c5//6wfOc5znOc/8uAgIAgEAQBAEMg+D5znOc5/5cBAEAgCAIAgEP+sY5z//1g+c5znP/+XAQBAICAIYhkHwfP/rB8HwfB8HwfB8=');
+
+    /**
+     * Start real-time polling for new messages in current conversation
+     */
+    function startMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+        }
+
+        // Poll every 3 seconds for new messages
+        messagePollingInterval = setInterval(pollNewMessages, 3000);
+    }
+
+    /**
+     * Stop message polling
+     */
+    function stopMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+            messagePollingInterval = null;
+        }
+    }
+
+    /**
+     * Poll for new messages in current conversation
+     */
+    async function pollNewMessages() {
+        if (!selectedConversationId || isPollingMessages) return;
+
+        isPollingMessages = true;
+
+        try {
+            const res = await axios.get(`${API_BASE}/chat/${selectedConversationId}/poll?last_message_id=${lastMessageId}`);
+
+            if (res.data.success && res.data.has_new) {
+                // Append new messages to the list
+                const newMessages = res.data.data;
+                messages = [...messages, ...newMessages];
+
+                // Update last message ID
+                if (newMessages.length > 0) {
+                    lastMessageId = newMessages[newMessages.length - 1].id;
+                }
+
+                // Re-render messages and scroll to bottom
+                renderMessages();
+                scrollToBottom();
+
+                // Play notification sound for customer messages
+                const customerMessages = newMessages.filter(m => m.sender_type === 'customer');
+                if (customerMessages.length > 0 && !isInitialLoad) {
+                    playNotificationSound();
+                }
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+        } finally {
+            isPollingMessages = false;
+            isInitialLoad = false;
+        }
+    }
+
+    /**
+     * Start sidebar polling for unread counts and new conversations
+     */
+    function startSidebarPolling() {
+        if (sidebarPollingInterval) {
+            clearInterval(sidebarPollingInterval);
+        }
+
+        // Poll every 5 seconds for sidebar updates
+        sidebarPollingInterval = setInterval(pollSidebarUpdates, 5000);
+    }
+
+    /**
+     * Poll for sidebar updates (unread counts, new messages in other conversations)
+     */
+    async function pollSidebarUpdates() {
+        try {
+            const pageParam = selectedPageId !== 'all' ? `&page_id=${selectedPageId}` : '';
+            const sinceParam = lastPollTime ? `&since=${lastPollTime}` : '';
+
+            const res = await axios.get(`${API_BASE}/chat/sidebar-updates?${pageParam}${sinceParam}`);
+
+            if (res.data.success) {
+                // Update last poll time
+                lastPollTime = res.data.server_time;
+
+                // Update conversations with new data
+                if (res.data.updated_conversations && res.data.updated_conversations.length > 0) {
+                    updateConversationsFromPoll(res.data.updated_conversations);
+                }
+
+                // Update total unread badge in header if needed
+                updateTotalUnreadBadge(res.data.total_unread);
+            }
+        } catch (error) {
+            console.error('Sidebar polling error:', error);
+        }
+    }
+
+    /**
+     * Update conversations list from poll data
+     */
+    function updateConversationsFromPoll(updatedConvs) {
+        let hasChanges = false;
+
+        updatedConvs.forEach(update => {
+            const existingIndex = conversations.findIndex(c => c.id === update.id);
+
+            if (existingIndex >= 0) {
+                // Update existing conversation
+                const existing = conversations[existingIndex];
+                if (existing.unread_count !== update.unread_count ||
+                    existing.last_message_preview !== update.last_message_preview ||
+                    existing.last_message_time !== update.last_message_time) {
+
+                    conversations[existingIndex] = {
+                        ...existing,
+                        unread_count: update.unread_count,
+                        last_message_preview: update.last_message_preview,
+                        last_message_time: update.last_message_time,
+                        customer_name: update.customer_name || existing.customer_name,
+                        customer_profile_pic: update.customer_profile_pic || existing.customer_profile_pic
+                    };
+                    hasChanges = true;
+
+                    // Play sound for new unread messages (not in currently selected conversation)
+                    if (update.unread_count > existing.unread_count && update.id !== selectedConversationId) {
+                        playNotificationSound();
+                    }
+                }
+            } else {
+                // New conversation - add to list
+                const page = pages.find(p => p.id == update.page_id);
+                conversations.unshift({
+                    ...update,
+                    page_name: page?.page_name || 'Unknown Page'
+                });
+                hasChanges = true;
+                playNotificationSound();
+            }
+        });
+
+        if (hasChanges) {
+            // Re-sort by last_message_time
+            conversations.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            renderConversations();
+        }
+    }
+
+    /**
+     * Update total unread badge
+     */
+    function updateTotalUnreadBadge(totalUnread) {
+        // Update page title with unread count
+        const baseTitle = 'Chat Dashboard - Facebook Chat Manager';
+        if (totalUnread > 0) {
+            document.title = `(${totalUnread}) ${baseTitle}`;
+        } else {
+            document.title = baseTitle;
+        }
+    }
+
+    /**
+     * Play notification sound
+     */
+    function playNotificationSound() {
+        try {
+            notificationSound.currentTime = 0;
+            notificationSound.volume = 0.5;
+            notificationSound.play().catch(() => {});
+        } catch (e) {}
+    }
+
+    /**
+     * Override selectConversation to integrate polling
+     */
+    const originalSelectConversation = selectConversation;
+    selectConversation = async function(conversationId) {
+        // Stop current message polling
+        stopMessagePolling();
+        isInitialLoad = true;
+
+        // Call original function
+        await originalSelectConversation(conversationId);
+
+        // Update lastMessageId from loaded messages
+        if (messages.length > 0) {
+            lastMessageId = messages[messages.length - 1].id;
+        } else {
+            lastMessageId = 0;
+        }
+
+        // Start polling for this conversation
+        startMessagePolling();
+    };
+
+    /**
+     * Override deselectConversation to stop polling
+     */
+    const originalDeselectConversation = deselectConversation;
+    deselectConversation = function() {
+        stopMessagePolling();
+        lastMessageId = 0;
+        originalDeselectConversation();
+    };
+
+    /**
+     * Override sendMessage to update lastMessageId after sending
+     */
+    const originalSendMessage = sendMessage;
+    sendMessage = async function() {
+        await originalSendMessage();
+
+        // Update lastMessageId from messages after send
+        if (messages.length > 0) {
+            lastMessageId = messages[messages.length - 1].id;
+        }
+    };
+
+    // =============================================
     // INITIALIZE
     // =============================================
     init();
+
+    // Start sidebar polling after init
+    setTimeout(() => {
+        startSidebarPolling();
+    }, 2000);
 </script>
 @endsection
