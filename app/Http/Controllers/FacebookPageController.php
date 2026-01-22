@@ -85,9 +85,11 @@ class FacebookPageController extends Controller
     public function disconnectPage($pageId)
     {
         try {
-            $page = FacebookPage::find($pageId);
-            
-            if (!$page || $page->user_id !== Auth::id()) {
+            $page = FacebookPage::where('id', $pageId)
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if (!$page) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Page not found'
@@ -114,9 +116,11 @@ class FacebookPageController extends Controller
      */
     public function show($pageId)
     {
-        $page = FacebookPage::find($pageId);
+        $page = FacebookPage::where('id', $pageId)
+            ->where('user_id', Auth::id())
+            ->first();
 
-        if (!$page || $page->user_id !== Auth::id()) {
+        if (!$page) {
             return response()->json([
                 'success' => false,
                 'message' => 'Page not found'

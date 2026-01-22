@@ -113,7 +113,7 @@
 <!-- Dashboard Content -->
 <div class="p-4 lg:p-6 space-y-6">
     <!-- Stats Cards Grid -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         <!-- Total Pages Card -->
         <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
             <div class="flex items-start justify-between">
@@ -175,25 +175,6 @@
             </div>
         </div>
 
-        <!-- Saved Chats Card -->
-        <div class="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500">Saved Chats</p>
-                    <p class="text-2xl lg:text-3xl font-bold text-slate-900 mt-1" id="savedChatsCount">0</p>
-                </div>
-                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-violet-50 rounded-xl flex items-center justify-center">
-                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-3 flex items-center text-xs text-slate-500">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-medium">
-                    Bookmarked
-                </span>
-            </div>
-        </div>
     </div>
 
     <!-- Two Column Layout for Desktop -->
@@ -348,18 +329,12 @@
             }
             await window.ensureAuthenticated();
 
-            // Fetch all data in parallel
-            const [pagesRes, savedChatsRes] = await Promise.all([
-                axios.get(`${API_BASE}/pages`),
-                axios.get(`${API_BASE}/saved-chats`)
-            ]);
-
+            // Fetch pages data
+            const pagesRes = await axios.get(`${API_BASE}/pages`);
             const pages = pagesRes.data;
-            const savedChats = savedChatsRes.data.data.data || [];
 
             // Update stats
             document.getElementById('totalPages').textContent = pages.length;
-            document.getElementById('savedChatsCount').textContent = savedChats.length;
 
             // Fetch conversations and unread count for all pages
             let totalConversations = 0;
@@ -372,9 +347,11 @@
                     const conversations = convRes.data.data.data || [];
                     totalConversations += conversations.length;
 
-                    // Count unread messages
+                    // Count unread messages and add page info to each conversation
                     conversations.forEach(conv => {
                         totalUnread += conv.unread_count || 0;
+                        conv.page_name = page.page_name;
+                        conv.page_id = page.id;
                     });
 
                     // Get recent 5 conversations
@@ -433,7 +410,7 @@
 
             if (sortedRecent.length > 0) {
                 const recentHTML = sortedRecent.map(conv => `
-                    <a href="/conversations" class="block px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
+                    <a href="/conversations/${conv.page_id}" class="block px-5 lg:px-6 py-4 hover:bg-slate-50/50 transition-colors duration-150">
                         <div class="flex items-center gap-4">
                             <div class="relative">
                                 <img src="${conv.customer_profile_pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(conv.customer_name || 'U') + '&size=44&background=random'}"
@@ -452,6 +429,12 @@
                                     ` : ''}
                                 </div>
                                 <p class="text-sm text-slate-500 truncate mt-0.5">${conv.last_message_preview || 'No messages yet'}</p>
+                                <p class="text-xs text-blue-600 truncate mt-1">
+                                    <svg class="w-3 h-3 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    ${conv.page_name}
+                                </p>
                             </div>
                         </div>
                     </a>
