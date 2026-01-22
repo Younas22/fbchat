@@ -11,13 +11,13 @@
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all">
         <div class="text-center mb-6">
             <!-- Logo -->
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <div id="loginLogo" class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                <svg class="w-10 h-10 text-white default-logo" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
                 </svg>
             </div>
             <h3 class="text-2xl font-bold text-slate-900">Welcome Back</h3>
-            <p class="text-slate-500 mt-1">Sign in to continue to FB Chat Manager</p>
+            <p id="loginSubtext" class="text-slate-500 mt-1">Sign in to continue to <span id="loginAppName">FB Chat Manager</span></p>
         </div>
 
         <!-- Login Form -->
@@ -180,6 +180,50 @@
 
 @section('scripts')
 <script>
+    // Load branding for login modal
+    function loadLoginBranding() {
+        const appName = localStorage.getItem('app_name') || 'FB Chat Manager';
+        const appLogo = localStorage.getItem('app_logo');
+
+        const nameEl = document.getElementById('loginAppName');
+        if (nameEl) nameEl.textContent = appName;
+
+        const logoEl = document.getElementById('loginLogo');
+        if (logoEl && appLogo) {
+            logoEl.innerHTML = `<img src="${appLogo}" alt="${appName}" class="w-16 h-16 rounded-2xl object-cover" onerror="this.parentElement.innerHTML='<svg class=\\'w-10 h-10 text-white\\' fill=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path d=\\'M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z\\'/></svg>'">`;
+            logoEl.classList.remove('bg-gradient-to-br', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-500/30');
+        }
+
+        // Also try to fetch from API if not logged in
+        fetchBrandingFromAPI();
+    }
+
+    async function fetchBrandingFromAPI() {
+        try {
+            const response = await axios.get('/api/settings/branding');
+            if (response.data.success) {
+                const { app_name, app_logo } = response.data.data;
+                if (app_name) {
+                    localStorage.setItem('app_name', app_name);
+                    document.getElementById('loginAppName').textContent = app_name;
+                }
+                if (app_logo) {
+                    localStorage.setItem('app_logo', app_logo);
+                    const logoEl = document.getElementById('loginLogo');
+                    if (logoEl) {
+                        logoEl.innerHTML = `<img src="${app_logo}" alt="${app_name}" class="w-16 h-16 rounded-2xl object-cover">`;
+                        logoEl.classList.remove('bg-gradient-to-br', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-500/30');
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('Using cached branding');
+        }
+    }
+
+    // Load branding immediately
+    loadLoginBranding();
+
     // Check if user is authenticated
     function checkAuth() {
         const token = localStorage.getItem('token');

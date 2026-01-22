@@ -15,6 +15,112 @@
         </div>
     </div>
 
+    <!-- App Branding Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 lg:px-6 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">App Branding</h3>
+                    <p class="text-sm text-slate-500 mt-0.5">Customize your app name, logo and policy URLs</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-5 lg:p-6 space-y-5">
+            <!-- App Name -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Application Name</label>
+                <input type="text" id="APP_NAME"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                              focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
+                              transition-all duration-200 outline-none"
+                       placeholder="FB Chat Manager">
+                <p class="text-xs text-slate-500 mt-1.5">Displayed in sidebar, topbar and login screen</p>
+            </div>
+
+            <!-- App Logo Upload -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Application Logo</label>
+                <input type="hidden" id="APP_LOGO" value="">
+
+                <!-- Logo Preview & Remove Section -->
+                <div id="logoPreviewSection" class="hidden mb-3">
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <img id="logoPreviewImg" src="" alt="Logo Preview" class="w-16 h-16 rounded-xl object-cover border border-slate-200">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-slate-700">Current Logo</p>
+                            <p id="logoFileName" class="text-xs text-slate-500 truncate max-w-xs"></p>
+                        </div>
+                        <button type="button" onclick="removeLogo()" id="removeLogoBtn"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-rose-600
+                                       bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            <span>Remove</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drag & Drop Upload Area -->
+                <div id="logoDropZone"
+                     class="relative border-2 border-dashed border-slate-300 rounded-xl p-6 text-center
+                            hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200 cursor-pointer"
+                     onclick="document.getElementById('logoFileInput').click()">
+                    <input type="file" id="logoFileInput" accept="image/*" class="hidden" onchange="handleLogoSelect(event)">
+
+                    <div id="uploadIconArea">
+                        <div class="w-12 h-12 mx-auto mb-3 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-medium text-slate-700 mb-1">Click to upload or drag and drop</p>
+                        <p class="text-xs text-slate-500">PNG, JPG, GIF, SVG or WebP (max 2MB)</p>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div id="uploadProgress" class="hidden">
+                        <div class="w-12 h-12 mx-auto mb-3">
+                            <svg class="w-12 h-12 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-sm font-medium text-indigo-600">Uploading...</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-1.5">Recommended size: 64x64 pixels or larger square image</p>
+            </div>
+
+            <!-- Privacy Policy URL -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Privacy Policy URL</label>
+                <input type="url" id="PRIVACY_POLICY_URL"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                              focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
+                              transition-all duration-200 outline-none"
+                       placeholder="https://example.com/privacy-policy">
+                <p class="text-xs text-slate-500 mt-1.5">Required for Facebook App Review</p>
+            </div>
+
+            <!-- Data Deletion URL -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">User Data Deletion URL</label>
+                <input type="url" id="DATA_DELETION_URL"
+                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+                              focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500
+                              transition-all duration-200 outline-none"
+                       placeholder="https://example.com/data-deletion">
+                <p class="text-xs text-slate-500 mt-1.5">Required for Facebook App Review - Link to data deletion instructions</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Facebook Configuration Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="px-5 lg:px-6 py-4 border-b border-slate-100">
@@ -359,6 +465,10 @@
 @section('scripts')
 <script>
     const settingKeys = [
+        'APP_NAME',
+        'APP_LOGO',
+        'PRIVACY_POLICY_URL',
+        'DATA_DELETION_URL',
         'FACEBOOK_APP_ID',
         'FACEBOOK_APP_SECRET',
         'FACEBOOK_GRAPH_API_VERSION',
@@ -502,6 +612,12 @@
 
                 // Set webhook URL
                 document.getElementById('webhookUrl').value = webhook_url;
+
+                // Preview logo if exists
+                previewLogo();
+
+                // Update branding
+                updateBranding();
             }
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -549,6 +665,8 @@
                 if (response.data.data.webhook_url) {
                     document.getElementById('webhookUrl').value = response.data.data.webhook_url;
                 }
+                // Update branding across the app
+                updateBranding();
             } else {
                 showToast(response.data.message || 'Failed to save settings', 'error');
             }
@@ -679,7 +797,202 @@
         }
     }
 
+    // Preview logo
+    function previewLogo() {
+        const logoUrl = document.getElementById('APP_LOGO').value;
+        const previewSection = document.getElementById('logoPreviewSection');
+        const previewImg = document.getElementById('logoPreviewImg');
+        const logoFileName = document.getElementById('logoFileName');
+        const dropZone = document.getElementById('logoDropZone');
+
+        if (logoUrl) {
+            previewImg.src = logoUrl;
+            previewImg.onerror = function() {
+                previewSection.classList.add('hidden');
+                dropZone.classList.remove('hidden');
+            };
+            previewImg.onload = function() {
+                previewSection.classList.remove('hidden');
+                // Extract filename from URL
+                const urlParts = logoUrl.split('/');
+                logoFileName.textContent = urlParts[urlParts.length - 1] || 'logo';
+            };
+        } else {
+            previewSection.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+        }
+    }
+
+    // Handle logo file selection
+    async function handleLogoSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/svg+xml', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('Please select a valid image file (PNG, JPG, GIF, SVG, WebP)', 'error');
+            return;
+        }
+
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('File size must be less than 2MB', 'error');
+            return;
+        }
+
+        await uploadLogo(file);
+    }
+
+    // Upload logo to server
+    async function uploadLogo(file) {
+        const dropZone = document.getElementById('logoDropZone');
+        const uploadIconArea = document.getElementById('uploadIconArea');
+        const uploadProgress = document.getElementById('uploadProgress');
+
+        // Show upload progress
+        uploadIconArea.classList.add('hidden');
+        uploadProgress.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('logo', file);
+
+            const response = await axios.post(`${API_BASE}/settings/upload-logo`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data.success) {
+                const logoUrl = response.data.data.logo_url;
+                document.getElementById('APP_LOGO').value = logoUrl;
+                showToast('Logo uploaded successfully', 'success');
+                previewLogo();
+                updateBranding();
+            } else {
+                showToast(response.data.message || 'Failed to upload logo', 'error');
+            }
+        } catch (error) {
+            console.error('Error uploading logo:', error);
+            showToast(error.response?.data?.message || 'Failed to upload logo', 'error');
+        } finally {
+            // Reset upload area
+            uploadIconArea.classList.remove('hidden');
+            uploadProgress.classList.add('hidden');
+            document.getElementById('logoFileInput').value = '';
+        }
+    }
+
+    // Remove logo
+    async function removeLogo() {
+        const removeBtn = document.getElementById('removeLogoBtn');
+        removeBtn.disabled = true;
+        removeBtn.innerHTML = `
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Removing...</span>
+        `;
+
+        try {
+            const response = await axios.delete(`${API_BASE}/settings/logo`);
+
+            if (response.data.success) {
+                document.getElementById('APP_LOGO').value = '';
+                document.getElementById('logoPreviewSection').classList.add('hidden');
+                document.getElementById('logoDropZone').classList.remove('hidden');
+                showToast('Logo removed successfully', 'success');
+                updateBranding();
+            } else {
+                showToast(response.data.message || 'Failed to remove logo', 'error');
+            }
+        } catch (error) {
+            console.error('Error removing logo:', error);
+            showToast(error.response?.data?.message || 'Failed to remove logo', 'error');
+        } finally {
+            removeBtn.disabled = false;
+            removeBtn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                <span>Remove</span>
+            `;
+        }
+    }
+
+    // Setup drag and drop
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('logoDropZone');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            if (file) {
+                handleLogoSelect({ target: { files: [file] } });
+            }
+        }, false);
+    }
+
+    // Update branding in sidebar, topbar and store in localStorage for login page
+    function updateBranding() {
+        const appName = document.getElementById('APP_NAME').value || 'FB Chat Manager';
+        const appLogo = document.getElementById('APP_LOGO').value;
+
+        // Store in localStorage for pages that load before API call
+        localStorage.setItem('app_name', appName);
+        if (appLogo) {
+            localStorage.setItem('app_logo', appLogo);
+        } else {
+            localStorage.removeItem('app_logo');
+        }
+
+        // Update sidebar brand name
+        const sidebarName = document.querySelector('#sidebar .nav-text h1');
+        if (sidebarName) {
+            sidebarName.textContent = appName.split(' ')[0] || 'FB Chat';
+        }
+        const sidebarSubtext = document.querySelector('#sidebar .nav-text p');
+        if (sidebarSubtext) {
+            sidebarSubtext.textContent = appName.split(' ').slice(1).join(' ') || 'Manager';
+        }
+
+        // Update sidebar logo if custom logo provided
+        const sidebarLogoContainer = document.querySelector('#sidebar .flex-shrink-0.w-10.h-10');
+        if (sidebarLogoContainer && appLogo) {
+            sidebarLogoContainer.innerHTML = `<img src="${appLogo}" alt="${appName}" class="w-10 h-10 rounded-xl object-cover">`;
+        }
+
+        // Update document title
+        document.title = `Settings - ${appName}`;
+    }
+
     // Load settings on page load
     loadSettings();
+
+    // Setup drag and drop on page load
+    setupDragAndDrop();
 </script>
 @endsection

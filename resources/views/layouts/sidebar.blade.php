@@ -23,15 +23,15 @@
         <!-- Logo & Brand -->
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
             <!-- Logo Icon -->
-            <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <div id="sidebarLogo" class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <svg class="w-6 h-6 text-white default-logo" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
                 </svg>
             </div>
             <!-- Brand Text (hidden when collapsed) -->
             <div class="nav-text min-w-0 transition-opacity duration-200">
-                <h1 class="text-base font-bold text-slate-900 truncate">FB Chat</h1>
-                <p class="text-xs text-slate-500 truncate">Manager</p>
+                <h1 id="sidebarAppName" class="text-base font-bold text-slate-900 truncate">FB Chat</h1>
+                <p id="sidebarAppSubtext" class="text-xs text-slate-500 truncate">Manager</p>
             </div>
         </a>
 
@@ -199,6 +199,59 @@
 </style>
 
 <script>
+    // Load app branding from API or localStorage
+    async function loadAppBranding() {
+        // First try localStorage for instant display
+        const cachedName = localStorage.getItem('app_name');
+        const cachedLogo = localStorage.getItem('app_logo');
+
+        if (cachedName) {
+            updateSidebarBranding(cachedName, cachedLogo);
+        }
+
+        // Then fetch from API
+        try {
+            while (!window.axios) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            const response = await axios.get('/api/settings/branding');
+            if (response.data.success) {
+                const { app_name, app_logo } = response.data.data;
+                if (app_name) {
+                    localStorage.setItem('app_name', app_name);
+                    if (app_logo) {
+                        localStorage.setItem('app_logo', app_logo);
+                    }
+                    updateSidebarBranding(app_name, app_logo);
+                }
+            }
+        } catch (error) {
+            console.log('Using default branding');
+        }
+    }
+
+    function updateSidebarBranding(appName, appLogo) {
+        const nameParts = appName.split(' ');
+        const firstName = nameParts[0] || 'FB Chat';
+        const restName = nameParts.slice(1).join(' ') || 'Manager';
+
+        const nameEl = document.getElementById('sidebarAppName');
+        const subtextEl = document.getElementById('sidebarAppSubtext');
+        const logoEl = document.getElementById('sidebarLogo');
+
+        if (nameEl) nameEl.textContent = firstName;
+        if (subtextEl) subtextEl.textContent = restName;
+
+        if (logoEl && appLogo) {
+            logoEl.innerHTML = `<img src="${appLogo}" alt="${appName}" class="w-10 h-10 rounded-xl object-cover" onerror="this.parentElement.innerHTML='<svg class=\\'w-6 h-6 text-white\\' fill=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path d=\\'M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z\\'/></svg>'">`;
+            logoEl.classList.remove('bg-gradient-to-br', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-500/25');
+        }
+    }
+
+    // Load branding on page load
+    loadAppBranding();
+
     // Fetch user info from API
     async function loadUserInfo() {
         // Wait for axios to be available

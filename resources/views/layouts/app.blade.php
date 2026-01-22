@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Facebook Chat Manager')</title>
+    <script>
+        // Set title from cached branding immediately
+        (function() {
+            const appName = localStorage.getItem('app_name');
+            if (appName) {
+                const currentTitle = document.title;
+                if (currentTitle.includes('Facebook Chat Manager')) {
+                    document.title = currentTitle.replace('Facebook Chat Manager', appName);
+                }
+            }
+        })();
+    </script>
     {{-- Tailwind CSS via CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
 

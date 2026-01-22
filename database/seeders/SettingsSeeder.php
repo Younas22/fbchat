@@ -71,6 +71,44 @@ class SettingsSeeder extends Seeder
                 'description' => 'Your application\'s public URL (without trailing slash)',
                 'is_encrypted' => false,
             ],
+
+            // App Branding Configuration Group
+            [
+                'key' => 'APP_NAME',
+                'value' => env('APP_NAME', 'FB Chat Manager'),
+                'type' => 'text',
+                'group' => 'branding',
+                'label' => 'Application Name',
+                'description' => 'Your application name displayed in sidebar, topbar and login screen',
+                'is_encrypted' => false,
+            ],
+            [
+                'key' => 'APP_LOGO',
+                'value' => null,
+                'type' => 'url',
+                'group' => 'branding',
+                'label' => 'Application Logo URL',
+                'description' => 'URL to your application logo image (recommended: 64x64 PNG)',
+                'is_encrypted' => false,
+            ],
+            [
+                'key' => 'PRIVACY_POLICY_URL',
+                'value' => null,
+                'type' => 'url',
+                'group' => 'branding',
+                'label' => 'Privacy Policy URL',
+                'description' => 'Link to your privacy policy page (required for Facebook App Review)',
+                'is_encrypted' => false,
+            ],
+            [
+                'key' => 'DATA_DELETION_URL',
+                'value' => null,
+                'type' => 'url',
+                'group' => 'branding',
+                'label' => 'User Data Deletion URL',
+                'description' => 'Link to user data deletion instructions page (required for Facebook App Review)',
+                'is_encrypted' => false,
+            ],
         ];
 
         foreach ($settings as $settingData) {

@@ -6,10 +6,32 @@ use App\Models\Setting;
 use App\Services\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class SettingController extends Controller
 {
+    /**
+     * Get public branding settings (no auth required).
+     */
+    public function getBranding()
+    {
+        $appName = SettingsService::get('APP_NAME', 'FB Chat Manager');
+        $appLogo = SettingsService::get('APP_LOGO');
+        $privacyPolicyUrl = SettingsService::get('PRIVACY_POLICY_URL');
+        $dataDeletionUrl = SettingsService::get('DATA_DELETION_URL');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'app_name' => $appName,
+                'app_logo' => $appLogo,
+                'privacy_policy_url' => $privacyPolicyUrl,
+                'data_deletion_url' => $dataDeletionUrl,
+            ],
+        ]);
+    }
+
     /**
      * Get all settings grouped by their group field.
      */
@@ -189,6 +211,91 @@ class SettingController extends Controller
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage(),
                 'output' => 'Error: ' . $e->getMessage() . "\n\nTroubleshooting:\n1. Make sure your current token is valid (not expired)\n2. Verify FACEBOOK_APP_ID and FACEBOOK_APP_SECRET are correct\n3. Check that your internet connection is working",
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload application logo.
+     */
+    public function uploadLogo(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Delete old logo if exists
+            $oldLogo = SettingsService::get('APP_LOGO');
+            if ($oldLogo && str_contains($oldLogo, '/storage/branding/')) {
+                $oldPath = str_replace('/storage/', '', parse_url($oldLogo, PHP_URL_PATH));
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            // Store the new logo
+            $file = $request->file('logo');
+            $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('branding', $filename, 'public');
+
+            // Generate URL
+            $logoUrl = asset('storage/' . $path);
+
+            // Save to settings
+            SettingsService::set('APP_LOGO', $logoUrl);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logo uploaded successfully',
+                'data' => [
+                    'logo_url' => $logoUrl,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload logo: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove application logo.
+     */
+    public function removeLogo()
+    {
+        try {
+            // Get current logo
+            $currentLogo = SettingsService::get('APP_LOGO');
+
+            // Delete file if it's a local storage file
+            if ($currentLogo && str_contains($currentLogo, '/storage/branding/')) {
+                $path = str_replace('/storage/', '', parse_url($currentLogo, PHP_URL_PATH));
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+
+            // Clear the setting
+            SettingsService::set('APP_LOGO', null);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logo removed successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove logo: ' . $e->getMessage(),
             ], 500);
         }
     }

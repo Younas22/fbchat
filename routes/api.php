@@ -20,6 +20,9 @@ Route::middleware('throttle:10,1')->group(function () {
 Route::get('/webhook/facebook', [WebhookController::class, 'verify']);
 Route::post('/webhook/facebook', [WebhookController::class, 'handle']);
 
+// Public branding settings (for login page, etc.)
+Route::get('/settings/branding', [SettingController::class, 'getBranding']);
+
 // Protected routes with rate limiting
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
@@ -55,4 +58,6 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/settings', [SettingController::class, 'index']);
     Route::post('/settings', [SettingController::class, 'update']);
     Route::post('/settings/exchange-token', [SettingController::class, 'exchangeToken']);
+    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo']);
+    Route::delete('/settings/logo', [SettingController::class, 'removeLogo']);
 });
