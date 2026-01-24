@@ -105,6 +105,9 @@
                 sidebar.classList.remove('w-64');
                 setSidebarState(true);
             }
+
+            // Force reflow to ensure smooth transition
+            sidebar.offsetHeight;
         }
 
         // Toggle mobile sidebar (show/hide)

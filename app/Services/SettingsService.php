@@ -140,7 +140,7 @@ class SettingsService
     public static function getWebhookUrl(): string
     {
         $appUrl = self::get('APP_URL', config('app.url'));
-        return rtrim($appUrl, '/') . '/api/facebook/webhook';
+        return rtrim($appUrl, '/') . '/api/webhook/facebook';
     }
 }
 

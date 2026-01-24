@@ -16,33 +16,39 @@
               flex flex-col
               transition-all duration-300 ease-in-out
               -translate-x-full lg:translate-x-0
-              shadow-xl lg:shadow-none">
+              shadow-xl lg:shadow-none"
+       style="will-change: transform;">
 
     <!-- Logo Section -->
-    <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100">
-        <!-- Logo & Brand -->
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0 overflow-hidden">
-            <!-- Logo Icon -->
-            <div id="sidebarLogo" class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <svg class="w-6 h-6 text-white default-logo" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-                </svg>
-            </div>
-            <!-- Brand Text (hidden when collapsed) -->
-            <div class="nav-text min-w-0 transition-opacity duration-200">
-                <h1 id="sidebarAppName" class="text-base font-bold text-slate-900 truncate">FB Chat</h1>
-                <p id="sidebarAppSubtext" class="text-xs text-slate-500 truncate">Manager</p>
-            </div>
-        </a>
+    <div class="h-16 flex items-center border-b border-slate-100 relative flex-shrink-0">
+        <!-- Logo & Brand Container -->
+        <div id="sidebarLogoContainer" class="flex items-center flex-1 min-w-0 px-4">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
+                <!-- Logo Icon (Always visible) -->
+                <div id="sidebarLogo" class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <svg class="w-6 h-6 text-white default-logo" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </div>
+                <!-- Brand Text (hidden when collapsed) -->
+                <div class="nav-text min-w-0 transition-all duration-200">
+                    <h1 id="sidebarAppName" class="text-base font-bold text-slate-900 truncate">FB Chat</h1>
+                    <p id="sidebarAppSubtext" class="text-xs text-slate-500 truncate">Manager</p>
+                </div>
+            </a>
+        </div>
 
         <!-- Collapse Toggle Button (Desktop only) -->
         <button onclick="toggleSidebar()"
-                class="collapse-btn hidden lg:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-lg
-                       text-slate-400 hover:text-slate-600 hover:bg-slate-100
-                       transition-colors duration-200"
-                title="Toggle Sidebar">
-            <svg class="w-5 h-5 collapse-icon transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                class="collapse-btn hidden lg:flex absolute -right-3.5 top-1/3
+                       items-center justify-center w-6 h-6 rounded-full
+                       bg-white border-2 border-slate-200
+                       text-slate-400 hover:text-slate-600 hover:border-slate-300
+                       transition-all duration-200 shadow-md z-20 flex-shrink-0"
+                title="Toggle Sidebar"
+                type="button">
+            <svg class="w-3.5 h-3.5 collapse-icon transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
         </button>
 
@@ -50,7 +56,8 @@
         <button onclick="toggleMobileSidebar()"
                 class="lg:hidden flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg
                        text-slate-400 hover:text-slate-600 hover:bg-slate-100
-                       transition-colors duration-200">
+                       transition-colors duration-200 mr-4"
+                type="button">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -58,7 +65,7 @@
     </div>
 
     <!-- Navigation Section -->
-    <nav class="flex-1 overflow-y-auto py-4 px-3">
+    <nav class="flex-1 py-4 px-3">
         <!-- Main Menu Label -->
         <div class="nav-text px-3 mb-2">
             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Main Menu</span>
@@ -81,7 +88,7 @@
                 </div>
                 <span class="nav-text font-medium transition-opacity duration-200">Dashboard</span>
                 <!-- Tooltip for collapsed state -->
-                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
+                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50 pointer-events-none">
                     Dashboard
                 </div>
             </a>
@@ -100,7 +107,7 @@
                 </div>
                 <span class="nav-text font-medium transition-opacity duration-200">Pages</span>
                 <!-- Tooltip -->
-                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
+                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50 pointer-events-none">
                     Pages
                 </div>
             </a>
@@ -119,7 +126,7 @@
                 </div>
                 <span class="nav-text font-medium transition-opacity duration-200">Conversations</span>
                 <!-- Tooltip -->
-                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
+                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50 pointer-events-none">
                     Conversations
                 </div>
             </a>
@@ -138,7 +145,7 @@
                 </div>
                 <span class="nav-text font-medium transition-opacity duration-200">Settings</span>
                 <!-- Tooltip -->
-                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
+                <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50 pointer-events-none">
                     Settings
                 </div>
             </a>
@@ -147,7 +154,7 @@
     </nav>
 
     <!-- User Section (Bottom) -->
-    <div class="border-t border-slate-100 p-3 overflow-hidden">
+    <div class="p-3 overflow-hidden flex-shrink-0 border-t border-slate-100">
         <div id="user-info" class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all duration-200 overflow-hidden">
             <!-- User Avatar -->
             <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
@@ -156,91 +163,228 @@
             <!-- User Info (hidden when collapsed) -->
             <div class="nav-text flex-1 min-w-0 transition-opacity duration-200">
                 <p class="text-sm font-medium text-slate-900 truncate">Admin User</p>
-                <button onclick="logout()" class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors">
+                <button onclick="logout()" class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors" type="button">
                     Sign out
                 </button>
             </div>
             <!-- Tooltip for collapsed state -->
-            <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50">
+            <div class="sidebar-tooltip absolute left-full ml-3 px-2 py-1 bg-slate-900 text-white text-sm rounded-md whitespace-nowrap z-50 pointer-events-none">
                 Admin User
             </div>
         </div>
     </div>
 </aside>
 
+{{-- Sidebar Mobile Overlay --}}
+<div id="sidebar-overlay" 
+     class="fixed inset-0 bg-black/50 z-40 lg:hidden -translate-x-full transition-transform duration-300 ease-in-out"
+     onclick="toggleMobileSidebar()">
+</div>
+
 {{-- Sidebar-specific styles for collapsed state --}}
 <style>
-    /* Prevent drag and resize behavior on sidebar elements */
-    #sidebar {
-        overflow: hidden;
-        resize: none;
-    }
-
+    /* Prevent drag behavior on sidebar elements */
     #sidebar,
     #sidebar * {
         -webkit-user-drag: none;
-        -khtml-user-drag: none;
-        -moz-user-drag: none;
-        -o-user-drag: none;
         user-drag: none;
-    }
-
-    #sidebar .nav-item,
-    #sidebar a,
-    #sidebar button,
-    #sidebar .border-t {
-        user-select: none;
         -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        cursor: default;
+        user-select: none;
     }
 
+    /* Allow cursors on interactive elements */
     #sidebar a,
     #sidebar button {
-        cursor: pointer;
+        cursor: pointer !important;
     }
 
-    /* Prevent border from being draggable */
-    #sidebar .border-t,
-    #sidebar .border-b {
+    /* SVG icons shouldn't be draggable */
+    #sidebar svg {
         pointer-events: none;
     }
 
-    #sidebar .border-t *,
-    #sidebar .border-b * {
-        pointer-events: auto;
+    /* Sidebar transitions */
+
+
+    /* Toggle button positioning - fixed position relative to sidebar */
+    .collapse-btn {
+        transition: all 0.3s ease !important;
+        outline: none !important;
+        border: 2px solid currentColor !important;
     }
 
-    /* When sidebar is collapsed, hide text elements and adjust width */
+    .collapse-btn:focus-visible {
+        outline: 2px solid #3b82f6 !important;
+        outline-offset: 2px !important;
+    }
+
+    .collapse-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease !important;
+    }
+
+    /* When sidebar is expanded, show button normally */
+    #sidebar:not(.sidebar-collapsed) .collapse-icon {
+        transform: rotate(0deg) !important;
+    }
+
+    /* When sidebar is collapsed, rotate icon 180deg */
+    #sidebar.sidebar-collapsed .collapse-icon {
+        transform: rotate(180deg) !important;
+    }
+
+    /* When sidebar is collapsed, rotate icon 180deg */
+    #sidebar.sidebar-collapsed .nav-item.bg-blue-50 {
+        background: transparent !important;
+    }
+
+    /* When sidebar is collapsed, rotate icon 180deg */
+    #sidebar.sidebar-collapsed .nav-item.gap-3 {
+        gap: 0 !important;
+    }
+
+    /* Hide tooltips by default */
+    .sidebar-tooltip {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        pointer-events: none !important;
+        position: absolute;
+        left: 100%;
+        margin-left: 0.75rem;
+    }
+
+    /* Show tooltips on hover when sidebar is collapsed */
+    #sidebar.sidebar-collapsed .nav-item:hover .sidebar-tooltip,
+    #sidebar.sidebar-collapsed .collapse-btn:hover ~ .sidebar-tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* When sidebar is collapsed, hide text elements */
     #sidebar.sidebar-collapsed .nav-text {
         opacity: 0;
         width: 0;
         overflow: hidden;
+        pointer-events: none;
+        transition: opacity 0.2s ease, width 0.2s ease;
     }
 
+    /* Center nav items when collapsed */
     #sidebar.sidebar-collapsed .nav-item {
         justify-content: center;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
 
     #sidebar.sidebar-collapsed .nav-item > div:first-child {
         margin: 0;
     }
 
-    /* Rotate collapse icon when collapsed */
-    #sidebar.sidebar-collapsed .collapse-icon {
-        transform: rotate(180deg);
-    }
-
-    /* Adjust user section in collapsed state */
+    /* Center user info when collapsed */
     #sidebar.sidebar-collapsed #user-info {
         justify-content: center;
         padding-left: 0.75rem;
         padding-right: 0.75rem;
     }
+
+    /* Logo section adjustments when collapsed */
+    #sidebar.sidebar-collapsed .h-16 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    #sidebar.sidebar-collapsed .h-16 > div {
+        justify-content: center;
+        width: 100%;
+    }
+
+    #sidebar.sidebar-collapsed #sidebarLogo {
+        margin: 0 auto;
+    }
+
+    .sidebar-collapsed #sidebarLogoContainer {
+        padding: 0px;
+    }
+
+    /* Mobile sidebar styles */
+    #sidebar-overlay {
+        z-index: 40;
+    }
+
+    /* Mobile sidebar open state */
+    #sidebar.mobile-open {
+        -translate-x: 0 !important;
+    }
+
+    #sidebar-overlay.mobile-open {
+        -translate-x: 0 !important;
+    }
 </style>
 
 <script>
+    // Sidebar state management
+    const sidebarState = {
+        isCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        isMobileOpen: false
+    };
+
+    // Initialize sidebar state
+    function initializeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        if (sidebarState.isCollapsed) {
+            sidebar.classList.add('sidebar-collapsed');
+        }
+    }
+
+    // Toggle desktop sidebar collapse
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        sidebarState.isCollapsed = !sidebarState.isCollapsed;
+        localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
+        
+    
+        if (sidebarState.isCollapsed) {
+            sidebar.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('sidebar-collapsed');
+        }
+    }
+
+    // Toggle mobile sidebar
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        if (!sidebar || !overlay) return;
+
+        sidebarState.isMobileOpen = !sidebarState.isMobileOpen;
+
+        if (sidebarState.isMobileOpen) {
+            sidebar.classList.add('mobile-open');
+            overlay.classList.add('mobile-open');
+        } else {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('mobile-open');
+        }
+    }
+
+    // Close mobile sidebar on link click
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar || !window.innerWidth < 1024) return;
+
+        if (e.target.closest('a') && sidebar.classList.contains('mobile-open')) {
+            toggleMobileSidebar();
+        }
+    });
+
     // Load app branding from API or localStorage
     async function loadAppBranding() {
         // First try localStorage for instant display
@@ -290,9 +434,6 @@
             logoEl.classList.remove('bg-gradient-to-br', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-500/25');
         }
     }
-
-    // Load branding on page load
-    loadAppBranding();
 
     // Fetch user info from API
     async function loadUserInfo() {
@@ -356,6 +497,17 @@
         window.location.href = '/';
     }
 
-    // Load user info on page load
-    loadUserInfo();
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSidebar();
+        loadAppBranding();
+        loadUserInfo();
+    });
+
+    // Fallback initialization if DOM is already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSidebar);
+    } else {
+        initializeSidebar();
+    }
 </script>
