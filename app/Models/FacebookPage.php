@@ -19,6 +19,7 @@ class FacebookPage extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
         'connected_at' => 'datetime',
         'is_active' => 'boolean',
     ];

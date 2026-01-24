@@ -19,7 +19,12 @@ class Conversation extends Model
         'is_archived'
     ];
 
-    protected $dates = ['last_message_time'];
+    protected $casts = [
+        'user_id' => 'integer',
+        'page_id' => 'integer',
+        'last_message_time' => 'datetime',
+        'is_archived' => 'boolean',
+    ];
 
     public function user()
     {

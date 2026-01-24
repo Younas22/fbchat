@@ -21,7 +21,7 @@
     <!-- Logo Section -->
     <div class="h-16 flex items-center justify-between px-4 border-b border-slate-100">
         <!-- Logo & Brand -->
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0 overflow-hidden">
             <!-- Logo Icon -->
             <div id="sidebarLogo" class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
                 <svg class="w-6 h-6 text-white default-logo" fill="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
 
         <!-- Collapse Toggle Button (Desktop only) -->
         <button onclick="toggleSidebar()"
-                class="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg
+                class="collapse-btn hidden lg:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-lg
                        text-slate-400 hover:text-slate-600 hover:bg-slate-100
                        transition-colors duration-200"
                 title="Toggle Sidebar">
@@ -48,7 +48,7 @@
 
         <!-- Close Button (Mobile only) -->
         <button onclick="toggleMobileSidebar()"
-                class="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg
+                class="lg:hidden flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg
                        text-slate-400 hover:text-slate-600 hover:bg-slate-100
                        transition-colors duration-200">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +147,8 @@
     </nav>
 
     <!-- User Section (Bottom) -->
-    <div class="border-t border-slate-100 p-3">
-        <div id="user-info" class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all duration-200">
+    <div class="border-t border-slate-100 p-3 overflow-hidden">
+        <div id="user-info" class="nav-item group relative flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all duration-200 overflow-hidden">
             <!-- User Avatar -->
             <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
                 A
@@ -170,6 +170,48 @@
 
 {{-- Sidebar-specific styles for collapsed state --}}
 <style>
+    /* Prevent drag and resize behavior on sidebar elements */
+    #sidebar {
+        overflow: hidden;
+        resize: none;
+    }
+
+    #sidebar,
+    #sidebar * {
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+    }
+
+    #sidebar .nav-item,
+    #sidebar a,
+    #sidebar button,
+    #sidebar .border-t {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: default;
+    }
+
+    #sidebar a,
+    #sidebar button {
+        cursor: pointer;
+    }
+
+    /* Prevent border from being draggable */
+    #sidebar .border-t,
+    #sidebar .border-b {
+        pointer-events: none;
+    }
+
+    #sidebar .border-t *,
+    #sidebar .border-b * {
+        pointer-events: auto;
+    }
+
     /* When sidebar is collapsed, hide text elements and adjust width */
     #sidebar.sidebar-collapsed .nav-text {
         opacity: 0;

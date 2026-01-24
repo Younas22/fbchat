@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class ChatController extends Controller
 {
@@ -146,7 +147,7 @@ class ChatController extends Controller
                 'attachment_type' => $attachmentType,
                 'attachment_url' => $attachmentUrl,
                 'status' => 'sent',
-                'sent_at' => $fbMsg['created_time'] ?? now(),
+                'sent_at' => isset($fbMsg['created_time']) ? Carbon::parse($fbMsg['created_time']) : now(),
             ]);
 
             $newMessagesCount++;
@@ -739,11 +740,11 @@ class ChatController extends Controller
 
                 // Get last message preview
                 $lastMessage = null;
-                $lastMessageTime = $fbConv['updated_time'] ?? now();
+                $lastMessageTime = isset($fbConv['updated_time']) ? Carbon::parse($fbConv['updated_time']) : now();
                 if (isset($fbConv['messages']['data'][0])) {
                     $lastMsg = $fbConv['messages']['data'][0];
                     $lastMessage = $lastMsg['message'] ?? '[Attachment]';
-                    $lastMessageTime = $lastMsg['created_time'] ?? $lastMessageTime;
+                    $lastMessageTime = isset($lastMsg['created_time']) ? Carbon::parse($lastMsg['created_time']) : $lastMessageTime;
                 }
 
                 Conversation::create([
@@ -768,7 +769,7 @@ class ChatController extends Controller
                     if ($fbTime > $dbTime) {
                         $conversation->update([
                             'last_message_preview' => $lastMsg['message'] ?? '[Attachment]',
-                            'last_message_time' => $lastMsg['created_time'],
+                            'last_message_time' => Carbon::parse($lastMsg['created_time']),
                         ]);
 
                         // Check if this is a customer message and increment unread
