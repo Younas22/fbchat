@@ -616,8 +616,15 @@
                         console.warn(`Failed to load conversations for page ${page.id}:`, e);
                     }
                 }
-                // Sort by last message time
-                allConversations.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+                // Sort by unread count first (unread messages at top), then by last message time
+                allConversations.sort((a, b) => {
+                    // First priority: unread conversations at the top
+                    if ((b.unread_count > 0) !== (a.unread_count > 0)) {
+                        return (b.unread_count > 0) ? 1 : -1;
+                    }
+                    // Second priority: sort by last message time (newer first)
+                    return new Date(b.last_message_time) - new Date(a.last_message_time);
+                });
                 conversations = allConversations;
                 hasMoreConversations = false;
             } else {
@@ -1482,8 +1489,15 @@
         }
 
         if (hasChanges) {
-            // Re-sort by last_message_time
-            conversations.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time));
+            // Re-sort by unread count first (unread messages at top), then by last_message_time
+            conversations.sort((a, b) => {
+                // First priority: unread conversations at the top
+                if ((b.unread_count > 0) !== (a.unread_count > 0)) {
+                    return (b.unread_count > 0) ? 1 : -1;
+                }
+                // Second priority: sort by last message time (newer first)
+                return new Date(b.last_message_time) - new Date(a.last_message_time);
+            });
             renderConversations();
         }
     }
