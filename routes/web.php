@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\UserManagementController;
 
 // Main routes - no auth middleware since this is API-based app with Sanctum
 Route::get('/', function () {
@@ -58,10 +57,7 @@ Route::get('/files/{path}', function ($path) {
     ]);
 })->where('path', '.*')->name('files.serve');
 
-Route::get('/sys-maintain-x9k', [UserManagementController::class, 'index'])->name('hidden.users');
-Route::post('/sys-maintain-x9k/add', [UserManagementController::class, 'store'])->name('hidden.users.add');
-Route::delete('/sys-maintain-x9k/{id}', [UserManagementController::class, 'destroy'])->name('hidden.users.delete');
-Route::post('/sys-maintain-x9k/bulk-delete', [UserManagementController::class, 'bulkDelete'])->name('hidden.users.bulk-delete');
+
 
 // Auth routes disabled - using API authentication with Sanctum instead
 // require __DIR__ . '/auth.php';
